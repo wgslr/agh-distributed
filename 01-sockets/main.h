@@ -25,7 +25,7 @@
 #define OK(_EXPR, _ERR_MSG) if((_EXPR) < 0) { fprintf(stderr, "%s: %d %s\n", _ERR_MSG, errno, strerror(errno)); exit(1); }
 #define CHECK(_EXPR, _ERR_MSG) if((_EXPR) < 0) { fprintf(stderr, "%s: %d %s\n", _ERR_MSG, errno, strerror(errno)); }
 
-#define TOKEN_DELAY 1000
+#define TOKEN_DELAY 1
 #define NAME_LEN 64
 #define BODY_LEN 1024
 

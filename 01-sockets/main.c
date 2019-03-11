@@ -14,9 +14,10 @@ pthread_t spawn(void *(*func)(void *), void *args);
 * Connection
 *********************************************************************************/
 
-void* tcp_server(void *args) {
+void* tcp_listener(void *args) {
+
     while(true) {
-        printf("I'm being a server!");
+        printf("I'm being a server!\n");
         sleep(TOKEN_DELAY);
     }
 
@@ -28,8 +29,9 @@ void* tcp_server(void *args) {
 *********************************************************************************/
 
 int main(int argc, char* argv[]) {
-    if (argc < 6) {
+    if (argc != 6) {
         fprintf(stderr, "Not enough CLI parameters\n");
+        return 1;
     }
 
     const char *name = argv[1];
