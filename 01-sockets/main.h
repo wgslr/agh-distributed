@@ -27,7 +27,8 @@
 
 #define TOKEN_DELAY 1
 #define NAME_LEN 64
-#define BODY_LEN 1024
+#define MAX_BODY_LEN 1024
+#define MAX_CONN_QUEUE 16
 
 
 
