@@ -10,6 +10,7 @@
 #include <errno.h>
 #include <netinet/in.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -29,6 +30,7 @@
 #define NAME_LEN 64
 #define MAX_BODY_LEN 1024
 #define MAX_CONN_QUEUE 16
+#define MAX_MSG_QUEUE 32
 
 
 

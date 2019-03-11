@@ -2,6 +2,21 @@
 
 #include "main.h"
 
+
+/*********************************************************************************
+* Global variables
+*********************************************************************************/
+
+struct in_addr next_addr;
+
+sem_t *msg_queue_sem;
+
+sem_t *token_available_sem;
+
+message *msg_queue[MAX_MSG_QUEUE];
+unsigned msg_queue_len;
+
+
 /*********************************************************************************
 * Predeclarations
 *********************************************************************************/
@@ -15,6 +30,13 @@ void accept_connection(int socket, int epoll_fd);
 message *read_message(int socket);
 
 void handle_message(const message *msg);
+
+int queue_message(message *msg);
+
+
+void semsignal(sem_t *sem);
+
+void semwait(sem_t *sem);
 
 void dumpmem(const void *pointer, size_t len);
 
@@ -79,6 +101,7 @@ void accept_connection(int socket, int epoll_fd) {
             .data.fd = client_fd
     };
     OK(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &event), "Error adding connection to epoll");
+    semsignal(token_available_sem);
 
     fprintf(stderr, "Accepted incoming connection\n");
 }
@@ -131,6 +154,44 @@ void send_message(int socket, msg_type type, void *data, size_t len) {
 
 
 /*********************************************************************************
+* Sender
+*********************************************************************************/
+
+void *tcp_sender(void *args) {
+    while(true){
+        fprintf(stderr, "Waiting for token\n");
+        semwait(token_available_sem);
+        semwait(msg_queue_sem);
+        if(msg_queue_len > 0) {
+            // @TODO send message
+            printf("Sending message\n");
+            --msg_queue_len;
+        }
+
+        semsignal(msg_queue_sem);
+    }
+
+}
+
+// Adds message to the to-send queue
+int queue_message(message *msg) {
+    semwait(msg_queue_sem);
+    int result = 0;
+
+    if(msg_queue_len == MAX_MSG_QUEUE) {
+        fprintf(stderr, "Message queue is full\n");
+        result = 1;
+    } else {
+        msg_queue[msg_queue_len] = msg;
+        ++msg_queue_len;
+    }
+
+    semsignal(msg_queue_sem);
+    return result;
+}
+
+
+/*********************************************************************************
 * Entrypoint
 *********************************************************************************/
 
@@ -143,12 +204,29 @@ int main(int argc, char *argv[]) {
     const char *name = argv[1];
     const int listener_port = atoi(argv[2]);
     const char *succ = argv[3];
-    const bool start_with_token = (const bool) atoi(argv[4]);
+    const bool start_with_token = argv[4][0] == '1';
     const bool use_tcp = strcmp("tcp", argv[5]) == 0 ? true : false;
 
+    msg_queue_sem = calloc(1, sizeof(sem_t));
+    token_available_sem = calloc(1, sizeof(sem_t));
+
+    sem_init(msg_queue_sem, 0, 1);
+    sem_init(token_available_sem, 0, (unsigned int) start_with_token);
+
+
     spawn(&tcp_listener, (void *) &listener_port);
+    spawn(&tcp_sender, NULL);
+
+    message msg = {
+            .type = EMPTY,
+            .destination_name = "alamakota"
+    };
+
+    queue_message(&msg);
+    queue_message(&msg);
 
     pause();
+
 
     return 0;
 }
@@ -171,6 +249,13 @@ pthread_t spawn(void *(*func)(void *), void *args) {
     return tid;
 }
 
+void semsignal(sem_t *sem) {
+    OK(sem_post(sem), "Semaphore post failed");
+}
+
+void semwait(sem_t *sem) {
+    OK(sem_wait(sem), "Waiting for semaphore failed");
+}
 
 void dumpmem(const void *pointer, size_t len) {
     uint8_t *p = pointer;
