@@ -5,14 +5,22 @@
 #ifndef INC_01_SOCKETS_MAIN_H
 #define INC_01_SOCKETS_MAIN_H
 
-#include <string.h>
+#include <arpa/inet.h>
+#include <assert.h>
 #include <errno.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <sys/types.h>
 #include <netinet/in.h>
+#include <pthread.h>
+#include <signal.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/epoll.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/un.h>
+#include <unistd.h>
+
 
 #define OK(_EXPR, _ERR_MSG) if((_EXPR) < 0) { fprintf(stderr, "%s: %d %s\n", _ERR_MSG, errno, strerror(errno)); exit(1); }
 #define CHECK(_EXPR, _ERR_MSG) if((_EXPR) < 0) { fprintf(stderr, "%s: %d %s\n", _ERR_MSG, errno, strerror(errno)); }
