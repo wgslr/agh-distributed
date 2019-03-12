@@ -37,6 +37,9 @@
 
 #define BROADCAST_NAME "__BROADCAST"
 
+#define MULTICAST_ADDR "224.0.0.128"
+#define MULTICAST_PORT 8111
+
 
 typedef enum {
     OOB_HELLO = 0x10,

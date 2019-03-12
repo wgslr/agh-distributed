@@ -29,6 +29,8 @@ char *node_name;
 struct sockaddr_in own_addr;
 struct sockaddr_in successor_addr;
 
+int log_fd = -1;
+
 /*********************************************************************************
 * Predeclarations
 *********************************************************************************/
@@ -62,6 +64,10 @@ void dumpmsg(const message *msg);
 struct sockaddr_in parse_address(char *addr_str);
 
 void input_loop(void);
+
+void log_token(void);
+
+void send_log(const char *msg);
 
 message *pop_message(void);
 
@@ -125,7 +131,6 @@ void accept_connection(int socket, int epoll_fd) {
             .data.fd = client_fd
     };
     OK(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &event), "Error adding connection to epoll");
-    semsignal(token_available_sem);
 
     fprintf(stderr, "Accepted incoming connection\n");
 }
@@ -194,6 +199,7 @@ void handle_message(message *msg) {
 
     if(received_token) {
         signal_token();
+        log_token();
     }
 }
 
@@ -202,7 +208,13 @@ void signal_token(void) {
     // ensure the semaphore is binary for sanity
     while(sem_trywait(token_available_sem) == 0) {}
     semsignal(token_available_sem);
+}
 
+
+void log_token(void) {
+    char msg[1024];
+    sprintf(msg, "{\"node\":\"%s\", \"message\":\"received token\"}", node_name);
+    send_log(msg);
 }
 
 
@@ -282,6 +294,23 @@ message *pop_message(void) {
     }
     return popped;
 }
+
+
+void send_log(const char *msg) {
+    if(log_fd < 0) {
+        log_fd = socket(AF_INET, SOCK_DGRAM, 0);
+        OK(log_fd, "Error creating datagram socket");
+    }
+
+    struct sockaddr_in addr = {0};
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = inet_addr(MULTICAST_ADDR);
+    addr.sin_port = htons(MULTICAST_PORT);
+
+    CHECK(sendto(log_fd, msg, strlen(msg), 0, (struct sockaddr *) &addr, sizeof(addr)),
+          "Error sending log on multicast");
+}
+
 
 /*********************************************************************************
 * Entrypoint
