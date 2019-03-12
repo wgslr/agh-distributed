@@ -159,8 +159,9 @@ message *read_message(int socket) {
 
 
 void handle_message(message *msg) {
-    printf("Received message:\n");
-    msg->type != EMPTY ? dumpmsg(msg) : NULL;
+    fprintf(stderr, "Received message:\n");
+//    msg->type != EMPTY ? dumpmsg(msg) : NULL;
+    dumpmsg(msg);
 
     bool received_token = true;
 
@@ -180,7 +181,7 @@ void handle_message(message *msg) {
         if(eq_addr(&body->successor_addr, &successor_addr)) {
             // insert new client into the ring before our successor
             successor_addr = body->sender_addr;
-            fprintf(stderr, "Changed successor to %s\n", msg->source_name);
+            fprintf(stdout, "Changed successor to %s\n", msg->source_name);
             free(msg);
         } else {
             push_message(msg);
@@ -219,10 +220,9 @@ void *tcp_sender(void *args) {
             shutdown(socket_fd, 0);
             socket_fd = socket(AF_INET, SOCK_STREAM, 0);
             OK(socket_fd, "Error creating sender socket");
-            if(connect(socket_fd, (struct sockaddr *) &successor_addr, sizeof(successor_addr)) < 0) {
+            while(connect(socket_fd, (struct sockaddr *) &successor_addr, sizeof(successor_addr)) < 0) {
                 fprintf(stderr, "Error connecting to peer socket: %d %s\n", errno, strerror(errno));
                 usleep(100000);
-                continue;
             }
             peer_addr = successor_addr;
         }
@@ -415,7 +415,7 @@ struct sockaddr_in parse_address(char *addr_str) {
 
 
 void dumpmsg(const message *msg) {
-    printf("from: %s\nto: %s\nlen: %u\ndata: ", msg->source_name, msg->destination_name, msg->len);
+    fprintf(stderr, "from: %s\nto: %s\nlen: %u\ndata: ", msg->source_name, msg->destination_name, msg->len);
     dumpmem(msg->data, msg->len);
 }
 
@@ -423,12 +423,12 @@ void dumpmsg(const message *msg) {
 void dumpmem(const void *pointer, const size_t len) {
     const uint8_t *p = pointer;
     for(size_t i = 0; i < len; ++i) {
-        printf("%02hX", *(p + i));
+        fprintf(stderr, "%02hX", *(p + i));
         if(i % 32 == 31)
-            printf("\n");
+            fprintf(stderr, "\n");
         else if(i % 4 == 3)
-            printf(" ");
+            fprintf(stderr, " ");
     }
-    printf("\n");
+    fprintf(stderr, "\n");
 }
 
