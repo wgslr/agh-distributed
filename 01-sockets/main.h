@@ -5,10 +5,8 @@
 #ifndef INC_01_SOCKETS_MAIN_H
 #define INC_01_SOCKETS_MAIN_H
 
-#include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
-#include <netinet/in.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include <signal.h>
@@ -17,11 +15,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/epoll.h>
-#include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
+// for getline
+#define __USE_GNU
+#include <stdio.h>
 
 #define OK(_EXPR, _ERR_MSG) if((_EXPR) < 0) { fprintf(stderr, "%s: %d %s\n", _ERR_MSG, errno, strerror(errno)); exit(1); }
 #define CHECK(_EXPR, _ERR_MSG) if((_EXPR) < 0) { fprintf(stderr, "%s: %d %s\n", _ERR_MSG, errno, strerror(errno)); }

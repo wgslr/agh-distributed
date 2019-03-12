@@ -1,5 +1,13 @@
-#include <stdio.h>
+// Wojciech Geisler
+// 2019-03
 
+#define _XOPEN_SOURCE
+#define _POSIX_C_SOURCE 200809L
+// inet_aton
+#define _DEFAULT_SOURCE
+
+
+#include <arpa/inet.h>
 #include "main.h"
 
 
@@ -18,7 +26,7 @@ unsigned msg_queue_len;
 
 char *node_name;
 
-struct sockaddr_in successor;
+struct sockaddr_in successor_addr;
 
 /*********************************************************************************
 * Predeclarations
@@ -34,7 +42,7 @@ message *read_message(int socket);
 
 void handle_message(const message *msg);
 
-int queue_message(message *msg);
+int push_message(message *msg);
 
 
 void semsignal(sem_t *sem);
@@ -46,6 +54,7 @@ void dumpmem(const void *pointer, size_t len);
 struct sockaddr_in parse_address(char *addr_str);
 
 void input_loop(void);
+message *pop_message(void);
 
 /*********************************************************************************
 * Connection
@@ -165,23 +174,30 @@ void send_message(int socket, msg_type type, void *data, size_t len) {
 *********************************************************************************/
 
 void *tcp_sender(void *args) {
+    (void) args;
+    int socket_fd = -1;
+    struct sockaddr_in peer_addr;
+
     while(true) {
-        fprintf(stderr, "Waiting for token\n");
-        semwait(token_available_sem);
-        semwait(msg_queue_sem);
-        if(msg_queue_len > 0) {
-            // @TODO send message
-            printf("Sending message\n");
-            --msg_queue_len;
+        if(socket_fd == -1 || peer_addr.sin_addr.s_addr != successor_addr.sin_addr.s_addr) {
+            CHECK(connect(socket_fd, (const struct sockaddr *) &successor_addr, sizeof(successor_addr)), "Error connecting to peer socket");
+            peer_addr = successor_addr;
         }
 
-        semsignal(msg_queue_sem);
+
+        fprintf(stderr, "Waiting for token\n");
+
+
+        semwait(token_available_sem);
+        message* to_send = pop_message();
+
+        CHECK(send(socket_fd, to_send, sizeof(message) + to_send->len, 0), "Error sending message");
     }
 
 }
 
 // Adds message to the to-send queue
-int queue_message(message *msg) {
+int push_message(message *msg) {
     semwait(msg_queue_sem);
     int result = 0;
 
@@ -197,6 +213,28 @@ int queue_message(message *msg) {
     return result;
 }
 
+message *pop_message(void) {
+    message *popped = NULL;
+    if(msg_queue_len > 0) {
+        semwait(msg_queue_sem);
+
+        popped = msg_queue[0];
+        for(unsigned i = 0; i < msg_queue_len - 1; ++i) {
+            msg_queue[i] = msg_queue[i + 1];
+        }
+        msg_queue[msg_queue_len] = NULL;
+        --msg_queue_len;
+
+        semsignal(msg_queue_sem);
+    } else {
+        // generate message to pass the token
+        popped = calloc(1, sizeof(message));
+        popped->type = EMPTY;
+        popped->len = 0;
+    }
+    return popped;
+}
+
 /*********************************************************************************
 * Entrypoint
 *********************************************************************************/
@@ -209,10 +247,11 @@ int main(int argc, char *argv[]) {
 
     node_name = calloc(MAX_NODE_NAME_LEN + 1, sizeof(char));
     strncpy(node_name, argv[1], MAX_NODE_NAME_LEN);
-    const int listener_port = atoi(argv[2]);
-    successor = parse_address(argv[3]);
+    int listener_port = atoi(argv[2]);
+    successor_addr = parse_address(argv[3]);
     const bool start_with_token = argv[4][0] == '1';
     const bool use_tcp = strcmp("tcp", argv[5]) == 0 ? true : false;
+    (void) use_tcp;
 
     msg_queue_sem = calloc(1, sizeof(sem_t));
     token_available_sem = calloc(1, sizeof(sem_t));
@@ -229,8 +268,8 @@ int main(int argc, char *argv[]) {
             .destination_name = "alamakota"
     };
 
-    queue_message(&msg);
-    queue_message(&msg);
+    push_message(&msg);
+    push_message(&msg);
 
     input_loop();
 
@@ -260,7 +299,7 @@ void input_loop(void) {
         strncpy(msg->destination_name, line, MAX_NODE_NAME_LEN);
         strncpy(msg->source_name, node_name, MAX_NODE_NAME_LEN);
         memcpy(msg->data, delim, strlen(delim));
-        queue_message(msg);
+        push_message(msg);
     }
 
 }
@@ -309,8 +348,8 @@ struct sockaddr_in parse_address(char *addr_str) {
 }
 
 
-void dumpmem(const void *pointer, size_t len) {
-    uint8_t *p = pointer;
+void dumpmem(const void *pointer, const size_t len) {
+    const uint8_t *p = pointer;
     for(size_t i = 0; i < len; ++i) {
         printf("%02hX", *(p + i));
         if(i % 32 == 31)
