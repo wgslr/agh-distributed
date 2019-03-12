@@ -178,8 +178,9 @@ void handle_message(message *msg) {
     } else if(msg->type == HELLO) {
         hello_body *body = (hello_body *) msg->data;
         if(eq_addr(&body->successor_addr, &successor_addr)) {
-            // insert new client into the ring
+            // insert new client into the ring before our successor
             successor_addr = body->sender_addr;
+            fprintf(stderr, "Changed successor to %s\n", msg->source_name);
             free(msg);
         } else {
             push_message(msg);
@@ -311,6 +312,7 @@ int main(int argc, char *argv[]) {
     spawn(&tcp_listener, (void *) &listener_port);
     spawn(&tcp_sender, NULL);
 
+    send_hello();
 
     input_loop();
 
@@ -337,7 +339,7 @@ void send_hello(void) {
     body->sender_addr = own_addr;
     body->successor_addr = successor_addr;
 
-    OK(send(socket_fd, &msg, sizeof(message) + msg->len, 0), "Error sending hello message");
+    OK(send(socket_fd, msg, sizeof(message) + msg->len, 0), "Error sending hello message");
     shutdown(socket_fd, 2);
 }
 
