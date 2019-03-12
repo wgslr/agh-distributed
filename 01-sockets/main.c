@@ -54,6 +54,7 @@ void dumpmem(const void *pointer, size_t len);
 struct sockaddr_in parse_address(char *addr_str);
 
 void input_loop(void);
+
 message *pop_message(void);
 
 /*********************************************************************************
@@ -175,12 +176,19 @@ void send_message(int socket, msg_type type, void *data, size_t len) {
 
 void *tcp_sender(void *args) {
     (void) args;
-    int socket_fd = -1;
-    struct sockaddr_in peer_addr;
+    struct sockaddr_in peer_addr = {0};
 
+    int socket_fd;
     while(true) {
-        if(socket_fd == -1 || peer_addr.sin_addr.s_addr != successor_addr.sin_addr.s_addr) {
-            CHECK(connect(socket_fd, (const struct sockaddr *) &successor_addr, sizeof(successor_addr)), "Error connecting to peer socket");
+        if(peer_addr.sin_addr.s_addr != successor_addr.sin_addr.s_addr) {
+            socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+            OK(socket_fd, "Error creating sender socket");
+            dumpmem(&successor_addr.sin_family, sizeof(successor_addr.sin_family));
+            dumpmem(&successor_addr.sin_addr.s_addr, sizeof(successor_addr.sin_addr.s_addr));
+            dumpmem(&successor_addr.sin_port, sizeof(successor_addr.sin_port));
+            dumpmem(&successor_addr, sizeof(successor_addr));
+//            CHECK(connect(socket_fd, (struct sockaddr *) &successor_addr, sizeof(successor_addr)), "Error connecting to peer socket");
+            CHECK(connect(socket_fd, (struct sockaddr *) &successor_addr, sizeof(successor_addr)), "Error connecting to peer socket");
             peer_addr = successor_addr;
         }
 
@@ -189,7 +197,7 @@ void *tcp_sender(void *args) {
 
 
         semwait(token_available_sem);
-        message* to_send = pop_message();
+        message *to_send = pop_message();
 
         CHECK(send(socket_fd, to_send, sizeof(message) + to_send->len, 0), "Error sending message");
     }
