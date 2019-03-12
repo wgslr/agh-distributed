@@ -157,13 +157,13 @@ message *read_message(int socket) {
 
 void handle_message(message *msg) {
     printf("Received message:\n");
-    dumpmsg(msg);
+    msg->type != EMPTY ? dumpmsg(msg) : NULL;
 
     if(msg->type == WITH_PAYLOAD && strcmp(msg->destination_name, node_name) == 0) {
-        fprintf(stdout, "Received message saying: %s", (char *) msg->data);
+        fprintf(stdout, "Message from %s: %s", msg->source_name, (char *) msg->data);
         free(msg);
     } else if(strcmp(msg->source_name, node_name) == 0) {
-        fprintf(stderr, "Our message made full circle, discarding.\n");
+        fprintf(stderr, "%s could not be reached, discarding message after full circle.\n", msg->destination_name);
         free(msg);
     } else if(msg->type == WITH_PAYLOAD) {
         push_message(msg);
