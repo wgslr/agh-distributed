@@ -42,9 +42,11 @@ bool eq_addr(const struct sockaddr_in *addr1, const struct sockaddr_in *addr2);
 
 message *read_message(int socket);
 
-void handle_message(const message *msg);
+void handle_message(message *msg);
 
 int push_message(message *msg);
+
+void signal_token(void);
 
 
 void semsignal(sem_t *sem);
@@ -52,6 +54,8 @@ void semsignal(sem_t *sem);
 void semwait(sem_t *sem);
 
 void dumpmem(const void *pointer, size_t len);
+
+void dumpmsg(const message *msg);
 
 struct sockaddr_in parse_address(char *addr_str);
 
@@ -87,7 +91,6 @@ void *tcp_listener(void *args) {
             if(msg != NULL) {
                 handle_message(msg);
             }
-            free(msg);
         }
     }
 }
@@ -143,7 +146,6 @@ message *read_message(int socket) {
         bytes = recv(socket, &buff->data, buff->len, 0);
         OK(bytes, "Error receiving message body")
         if(bytes < (ssize_t) buff->len) {
-            dumpmem(buff->data, bytes);
             fprintf(stderr, "Received truncated message, ignoring\n");
             return NULL;
         }
@@ -153,26 +155,32 @@ message *read_message(int socket) {
 }
 
 
-void handle_message(const message *msg) {
+void handle_message(message *msg) {
     printf("Received message:\n");
-    dumpmem(msg, sizeof(message) + msg->len);
+    dumpmsg(msg);
 
+    if(msg->type == WITH_PAYLOAD && strcmp(msg->destination_name, node_name) == 0) {
+        fprintf(stdout, "Received message saying: %s", (char *) msg->data);
+        free(msg);
+    } else if(strcmp(msg->source_name, node_name) == 0) {
+        fprintf(stderr, "Our message made full circle, discarding.\n");
+        free(msg);
+    } else if(msg->type == WITH_PAYLOAD) {
+        push_message(msg);
+    } else {
+        free(msg);
+    }
+    // TODO hello message
+
+    signal_token();
+}
+
+
+void signal_token(void) {
     // ensure the semaphore is binary for sanity
     while(sem_trywait(token_available_sem) == 0) {}
     semsignal(token_available_sem);
 
-}
-
-
-void send_message(int socket, msg_type type, void *data, size_t len) {
-    message *msg = calloc(1, sizeof(message) + len);
-    msg->type = type;
-    msg->len = len;
-    if(len > 0) {
-        memcpy(msg->data, data, len);
-    }
-    OK(send(socket, msg, sizeof(message) + len, 0), "Error sending message");
-    free(msg);
 }
 
 
@@ -192,7 +200,7 @@ void *tcp_sender(void *args) {
             OK(socket_fd, "Error creating sender socket");
             if(connect(socket_fd, (struct sockaddr *) &successor_addr, sizeof(successor_addr)) < 0) {
                 fprintf(stderr, "Error connecting to peer socket: %d %s\n", errno, strerror(errno));
-                sleep(100);
+                usleep(100000);
                 continue;
             }
             peer_addr = successor_addr;
@@ -363,6 +371,12 @@ struct sockaddr_in parse_address(char *addr_str) {
             .sin_port =  htons(port),
     };
     return parsed;
+}
+
+
+void dumpmsg(const message *msg) {
+    printf("from: %s\nto: %s\nlen: %u\ndata: ", msg->source_name, msg->destination_name, msg->len);
+    dumpmem(msg->data, msg->len);
 }
 
 
