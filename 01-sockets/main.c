@@ -174,7 +174,8 @@ void handle_message(message *msg) {
         fprintf(stdout, "Message from %s: %s", msg->source_name, (char *) msg->data);
         free(msg);
     } else if(strcmp(msg->source_name, node_name) == 0) {
-        fprintf(stderr, "%s could not be reached, discarding message after full circle.\n", msg->destination_name);
+        if(strcmp(msg->destination_name, BROADCAST_NAME) != 0)
+            fprintf(stdout, "%s could not be reached, discarding message after full circle.\n", msg->destination_name);
         free(msg);
     } else if(msg->type == OOB_HELLO) {
         // message from an incoming client, insert into normal token-managed flow
@@ -186,7 +187,10 @@ void handle_message(message *msg) {
         if(eq_addr(&body->successor_addr, &successor_addr)) {
             // insert new client into the ring before our successor
             successor_addr = body->sender_addr;
-            fprintf(stdout, "Changed successor to %s\n", msg->source_name);
+
+            char log[128];
+            sprintf(log, "Changed successor to %s", msg->source_name);
+            send_log(log);
             free(msg);
         } else {
             push_message(msg);
@@ -212,9 +216,7 @@ void signal_token(void) {
 
 
 void log_token(void) {
-    char msg[1024];
-    sprintf(msg, "{\"node\":\"%s\", \"message\":\"received token\"}", node_name);
-    send_log(msg);
+    send_log("Received token");
 }
 
 
@@ -307,7 +309,10 @@ void send_log(const char *msg) {
     addr.sin_addr.s_addr = inet_addr(MULTICAST_ADDR);
     addr.sin_port = htons(MULTICAST_PORT);
 
-    CHECK(sendto(log_fd, msg, strlen(msg), 0, (struct sockaddr *) &addr, sizeof(addr)),
+    char json[1024];
+    sprintf(json, "{\"node\":\"%s\", \"message\":\"%s\"}", node_name, msg);
+
+    CHECK(sendto(log_fd, json, strlen(json), 0, (struct sockaddr *) &addr, sizeof(addr)),
           "Error sending log on multicast");
 }
 
