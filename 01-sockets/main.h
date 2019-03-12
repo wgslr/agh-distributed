@@ -35,10 +35,12 @@
 #define MAX_CONN_QUEUE 16
 #define MAX_MSG_QUEUE 32
 
+#define BROADCAST_NAME "__BROADCAST"
 
 
 typedef enum {
-    NEW_CLIENT = 0x11,
+    OOB_HELLO = 0x10,
+    HELLO = 0x11,
     WITH_PAYLOAD = 0x22,
     EMPTY = 0x33,
 } msg_type;
@@ -51,5 +53,11 @@ typedef struct {
     char destination_name[MAX_NODE_NAME_LEN + 1];
     uint32_t data[0];
 } message;
+
+
+typedef struct {
+    struct sockaddr_in sender_addr;
+    struct sockaddr_in successor_addr;
+} hello_body;
 
 #endif //INC_01_SOCKETS_MAIN_H

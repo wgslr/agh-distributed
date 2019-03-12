@@ -147,6 +147,7 @@ message *read_message(int socket) {
         OK(bytes, "Error receiving message body")
         if(bytes < (ssize_t) buff->len) {
             fprintf(stderr, "Received truncated message, ignoring\n");
+            free(buff);
             return NULL;
         }
     }
@@ -159,20 +160,37 @@ void handle_message(message *msg) {
     printf("Received message:\n");
     msg->type != EMPTY ? dumpmsg(msg) : NULL;
 
+    bool received_token = true;
+
     if(msg->type == WITH_PAYLOAD && strcmp(msg->destination_name, node_name) == 0) {
         fprintf(stdout, "Message from %s: %s", msg->source_name, (char *) msg->data);
         free(msg);
     } else if(strcmp(msg->source_name, node_name) == 0) {
         fprintf(stderr, "%s could not be reached, discarding message after full circle.\n", msg->destination_name);
         free(msg);
+    } else if(msg->type == OOB_HELLO) {
+        // message from an incoming client, insert into normal token-managed flow
+        received_token = false;
+        msg->type = HELLO;
+        push_message(msg);
+    } else if(msg->type == HELLO) {
+        hello_body *body = (hello_body *) msg->data;
+        if(eq_addr(&body->successor_addr, &successor_addr)) {
+            // insert new client into the ring
+            successor_addr = body->sender_addr;
+            free(msg);
+        } else {
+            push_message(msg);
+        }
     } else if(msg->type == WITH_PAYLOAD) {
         push_message(msg);
     } else {
         free(msg);
     }
-    // TODO hello message
 
-    signal_token();
+    if(received_token) {
+        signal_token();
+    }
 }
 
 
@@ -213,6 +231,7 @@ void *tcp_sender(void *args) {
         message *to_send = pop_message();
 
         CHECK(send(socket_fd, to_send, sizeof(message) + to_send->len, 0), "Error sending message");
+        free(to_send);
     }
 }
 
