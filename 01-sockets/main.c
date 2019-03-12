@@ -155,6 +155,10 @@ void handle_message(const message *msg) {
     printf("Received message:\n");
     dumpmem(msg, sizeof(message));
 
+    // ensure the semaphore is binary for sanity
+    while(sem_trywait(token_available_sem) == 0) {}
+    semsignal(token_available_sem);
+
 }
 
 
@@ -187,7 +191,6 @@ void *tcp_sender(void *args) {
             dumpmem(&successor_addr.sin_addr.s_addr, sizeof(successor_addr.sin_addr.s_addr));
             dumpmem(&successor_addr.sin_port, sizeof(successor_addr.sin_port));
             dumpmem(&successor_addr, sizeof(successor_addr));
-//            CHECK(connect(socket_fd, (struct sockaddr *) &successor_addr, sizeof(successor_addr)), "Error connecting to peer socket");
             CHECK(connect(socket_fd, (struct sockaddr *) &successor_addr, sizeof(successor_addr)), "Error connecting to peer socket");
             peer_addr = successor_addr;
         }
@@ -197,6 +200,7 @@ void *tcp_sender(void *args) {
 
 
         semwait(token_available_sem);
+        sleep(TOKEN_DELAY);
         message *to_send = pop_message();
 
         CHECK(send(socket_fd, to_send, sizeof(message) + to_send->len, 0), "Error sending message");
