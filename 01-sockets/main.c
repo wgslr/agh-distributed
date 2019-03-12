@@ -26,6 +26,7 @@ unsigned msg_queue_len;
 
 char *node_name;
 
+struct sockaddr_in own_addr;
 struct sockaddr_in successor_addr;
 
 /*********************************************************************************
@@ -34,7 +35,7 @@ struct sockaddr_in successor_addr;
 
 pthread_t spawn(void *(*func)(void *), void *args);
 
-int open_tcp_socket(const short port);
+int open_tcp_socket(short port);
 
 void accept_connection(int socket, int epoll_fd);
 
@@ -48,6 +49,7 @@ int push_message(message *msg);
 
 void signal_token(void);
 
+void send_hello(void);
 
 void semsignal(sem_t *sem);
 
@@ -292,7 +294,7 @@ int main(int argc, char *argv[]) {
 
     node_name = calloc(MAX_NODE_NAME_LEN + 1, sizeof(char));
     strncpy(node_name, argv[1], MAX_NODE_NAME_LEN);
-    int listener_port = atoi(argv[2]);
+    own_addr = parse_address(argv[2]);
     successor_addr = parse_address(argv[3]);
     const bool start_with_token = argv[4][0] == '1';
     const bool use_tcp = strcmp("tcp", argv[5]) == 0 ? true : false;
@@ -305,19 +307,12 @@ int main(int argc, char *argv[]) {
     sem_init(token_available_sem, 0, (unsigned int) start_with_token);
 
 
+    short listener_port = ntohs(own_addr.sin_port);
     spawn(&tcp_listener, (void *) &listener_port);
     spawn(&tcp_sender, NULL);
 
-    message msg = {
-            .type = EMPTY,
-            .destination_name = "alamakota"
-    };
-
-    push_message(&msg);
-    push_message(&msg);
 
     input_loop();
-
 
     return 0;
 }
@@ -332,14 +327,18 @@ void send_hello(void) {
         fprintf(stderr, "Error connecting to peer socket: %d %s\n", errno, strerror(errno));
         usleep(500000);
     }
-    message msg = {
-            .destination_name = BROADCAST_NAME,
-            .len = sizeof(hello_body),
-            .type=OOB_HELLO
-    };
-    strcpy(msg.source_name, node_name);
-    hello_body *body = msg.data;
-    body->sender_addr =
+    message *msg = calloc(1, sizeof(message) + sizeof(hello_body));
+    msg->len = sizeof(hello_body);
+    msg->type = OOB_HELLO;
+    strcpy(msg->source_name, node_name);
+    strcpy(msg->destination_name, BROADCAST_NAME);
+
+    hello_body *body = (hello_body *) msg->data;
+    body->sender_addr = own_addr;
+    body->successor_addr = successor_addr;
+
+    OK(send(socket_fd, &msg, sizeof(message) + msg->len, 0), "Error sending hello message");
+    shutdown(socket_fd, 2);
 }
 
 
