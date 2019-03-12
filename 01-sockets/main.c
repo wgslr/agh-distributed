@@ -323,6 +323,26 @@ int main(int argc, char *argv[]) {
 }
 
 
+void send_hello(void) {
+    int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+    OK(socket_fd, "Error creating hello socket");
+
+
+    while(connect(socket_fd, (struct sockaddr *) &successor_addr, sizeof(successor_addr)) < 0) {
+        fprintf(stderr, "Error connecting to peer socket: %d %s\n", errno, strerror(errno));
+        usleep(500000);
+    }
+    message msg = {
+            .destination_name = BROADCAST_NAME,
+            .len = sizeof(hello_body),
+            .type=OOB_HELLO
+    };
+    strcpy(msg.source_name, node_name);
+    hello_body *body = msg.data;
+    body->sender_addr =
+}
+
+
 void input_loop(void) {
     char *line = NULL;
     size_t n = 0;
