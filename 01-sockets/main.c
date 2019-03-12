@@ -38,6 +38,8 @@ int open_tcp_socket(const short port);
 
 void accept_connection(int socket, int epoll_fd);
 
+bool eq_addr(const struct sockaddr_in *addr1, const struct sockaddr_in *addr2);
+
 message *read_message(int socket);
 
 void handle_message(const message *msg);
@@ -153,7 +155,7 @@ message *read_message(int socket) {
 
 void handle_message(const message *msg) {
     printf("Received message:\n");
-    dumpmem(msg, sizeof(message));
+    dumpmem(msg, sizeof(message) + msg->len);
 
     // ensure the semaphore is binary for sanity
     while(sem_trywait(token_available_sem) == 0) {}
@@ -182,30 +184,34 @@ void *tcp_sender(void *args) {
     (void) args;
     struct sockaddr_in peer_addr = {0};
 
-    int socket_fd;
+    int socket_fd = -1;
     while(true) {
-        if(peer_addr.sin_addr.s_addr != successor_addr.sin_addr.s_addr) {
+        if(!eq_addr(&peer_addr, &successor_addr)) {
+            shutdown(socket_fd, 0);
             socket_fd = socket(AF_INET, SOCK_STREAM, 0);
             OK(socket_fd, "Error creating sender socket");
-            dumpmem(&successor_addr.sin_family, sizeof(successor_addr.sin_family));
-            dumpmem(&successor_addr.sin_addr.s_addr, sizeof(successor_addr.sin_addr.s_addr));
-            dumpmem(&successor_addr.sin_port, sizeof(successor_addr.sin_port));
-            dumpmem(&successor_addr, sizeof(successor_addr));
-            CHECK(connect(socket_fd, (struct sockaddr *) &successor_addr, sizeof(successor_addr)), "Error connecting to peer socket");
+            if(connect(socket_fd, (struct sockaddr *) &successor_addr, sizeof(successor_addr)) < 0) {
+                fprintf(stderr, "Error connecting to peer socket: %d %s\n", errno, strerror(errno));
+                sleep(100);
+                continue;
+            }
             peer_addr = successor_addr;
         }
 
-
         fprintf(stderr, "Waiting for token\n");
-
-
         semwait(token_available_sem);
         sleep(TOKEN_DELAY);
+
         message *to_send = pop_message();
 
         CHECK(send(socket_fd, to_send, sizeof(message) + to_send->len, 0), "Error sending message");
     }
+}
 
+bool eq_addr(const struct sockaddr_in *addr1, const struct sockaddr_in *addr2) {
+    return addr1->sin_family == addr2->sin_family &&
+           addr1->sin_port == addr2->sin_port &&
+           addr1->sin_addr.s_addr == addr2->sin_addr.s_addr;
 }
 
 // Adds message to the to-send queue
