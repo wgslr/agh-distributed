@@ -16,6 +16,9 @@ sem_t *token_available_sem;
 message *msg_queue[MAX_MSG_QUEUE];
 unsigned msg_queue_len;
 
+char *node_name;
+
+struct sockaddr_in successor;
 
 /*********************************************************************************
 * Predeclarations
@@ -39,6 +42,10 @@ void semsignal(sem_t *sem);
 void semwait(sem_t *sem);
 
 void dumpmem(const void *pointer, size_t len);
+
+struct sockaddr_in parse_address(char *addr_str);
+
+void input_loop(void);
 
 /*********************************************************************************
 * Connection
@@ -158,7 +165,7 @@ void send_message(int socket, msg_type type, void *data, size_t len) {
 *********************************************************************************/
 
 void *tcp_sender(void *args) {
-    while(true){
+    while(true) {
         fprintf(stderr, "Waiting for token\n");
         semwait(token_available_sem);
         semwait(msg_queue_sem);
@@ -190,7 +197,6 @@ int queue_message(message *msg) {
     return result;
 }
 
-
 /*********************************************************************************
 * Entrypoint
 *********************************************************************************/
@@ -201,9 +207,10 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    const char *name = argv[1];
+    node_name = calloc(MAX_NODE_NAME_LEN + 1, sizeof(char));
+    strncpy(node_name, argv[1], MAX_NODE_NAME_LEN);
     const int listener_port = atoi(argv[2]);
-    const char *succ = argv[3];
+    successor = parse_address(argv[3]);
     const bool start_with_token = argv[4][0] == '1';
     const bool use_tcp = strcmp("tcp", argv[5]) == 0 ? true : false;
 
@@ -225,10 +232,37 @@ int main(int argc, char *argv[]) {
     queue_message(&msg);
     queue_message(&msg);
 
-    pause();
+    input_loop();
 
 
     return 0;
+}
+
+
+void input_loop(void) {
+    char *line = NULL;
+    size_t n = 0;
+    while(true) {
+
+        OK(getline(&line, &n, stdin), "Error reading line from stdin");
+        char *delim = strchr(line, ' ');
+        if(delim == NULL) {
+            printf("You must provide destination and content for the message\n");
+            continue;
+        }
+
+        *delim = '\0';
+        ++delim;
+        message *msg = calloc(1, sizeof(message) + strlen(delim));
+
+        msg->type = WITH_PAYLOAD;
+        msg->len = (uint32_t) strlen(delim);
+        strncpy(msg->destination_name, line, MAX_NODE_NAME_LEN);
+        strncpy(msg->source_name, node_name, MAX_NODE_NAME_LEN);
+        memcpy(msg->data, delim, strlen(delim));
+        queue_message(msg);
+    }
+
 }
 
 
@@ -256,6 +290,24 @@ void semsignal(sem_t *sem) {
 void semwait(sem_t *sem) {
     OK(sem_wait(sem), "Waiting for semaphore failed");
 }
+
+
+struct sockaddr_in parse_address(char *addr_str) {
+    char *delim = strstr(addr_str, ":");
+    *delim = '\0';
+    const unsigned short port = (unsigned short) atoi(delim + 1);
+
+    struct in_addr addr;
+    inet_aton(addr_str, &addr);
+
+    struct sockaddr_in parsed = {
+            .sin_family = AF_INET,
+            .sin_addr = addr,
+            .sin_port =  htons(port),
+    };
+    return parsed;
+}
+
 
 void dumpmem(const void *pointer, size_t len) {
     uint8_t *p = pointer;

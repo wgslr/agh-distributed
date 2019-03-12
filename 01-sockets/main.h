@@ -27,7 +27,7 @@
 #define CHECK(_EXPR, _ERR_MSG) if((_EXPR) < 0) { fprintf(stderr, "%s: %d %s\n", _ERR_MSG, errno, strerror(errno)); }
 
 #define TOKEN_DELAY 1
-#define NAME_LEN 64
+#define MAX_NODE_NAME_LEN 64
 #define MAX_BODY_LEN 1024
 #define MAX_CONN_QUEUE 16
 #define MAX_MSG_QUEUE 32
@@ -44,8 +44,8 @@ typedef enum {
 typedef struct {
     msg_type type;
     uint32_t len;
-    char source_name[NAME_LEN + 1];
-    char destination_name[NAME_LEN + 1];
+    char source_name[MAX_NODE_NAME_LEN + 1];
+    char destination_name[MAX_NODE_NAME_LEN + 1];
     uint32_t data[0];
 } message;
 
