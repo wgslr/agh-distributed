@@ -67,7 +67,7 @@ void input_loop(void);
 
 void log_token(void);
 
-void send_log(const char *msg);
+void send_log_json(const char *msg);
 
 message *pop_message(void);
 
@@ -131,8 +131,6 @@ void accept_connection(int socket, int epoll_fd) {
             .data.fd = client_fd
     };
     OK(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &event), "Error adding connection to epoll");
-
-    fprintf(stderr, "Accepted incoming connection\n");
 }
 
 message *read_message(int socket) {
@@ -142,7 +140,6 @@ message *read_message(int socket) {
     CHECK(bytes, "Error receiving message header")
 
     if(bytes == 0) {
-        fprintf(stderr, "Peer closed connection\n");
         shutdown(socket, SHUT_RDWR);
         close(socket);
         free(buff);
@@ -164,10 +161,6 @@ message *read_message(int socket) {
 
 
 void handle_message(message *msg) {
-    fprintf(stderr, "Received message:\n");
-//    msg->type != EMPTY ? dumpmsg(msg) : NULL;
-    dumpmsg(msg);
-
     bool received_token = true;
 
     if(msg->type == WITH_PAYLOAD && strcmp(msg->destination_name, node_name) == 0) {
@@ -190,7 +183,7 @@ void handle_message(message *msg) {
 
             char log[128];
             sprintf(log, "Changed successor to %s", msg->source_name);
-            send_log(log);
+            send_log_json(log);
             free(msg);
         } else {
             push_message(msg);
@@ -216,7 +209,7 @@ void signal_token(void) {
 
 
 void log_token(void) {
-    send_log("Received token");
+    send_log_json("Received token");
 }
 
 
@@ -235,13 +228,10 @@ void *tcp_sender(void *args) {
             socket_fd = socket(AF_INET, SOCK_STREAM, 0);
             OK(socket_fd, "Error creating sender socket");
             while(connect(socket_fd, (struct sockaddr *) &successor_addr, sizeof(successor_addr)) < 0) {
-                fprintf(stderr, "Error connecting to peer socket: %d %s\n", errno, strerror(errno));
                 usleep(100000);
             }
             peer_addr = successor_addr;
         }
-
-        fprintf(stderr, "Waiting for token\n");
         semwait(token_available_sem);
         sleep(TOKEN_DELAY);
 
@@ -298,7 +288,7 @@ message *pop_message(void) {
 }
 
 
-void send_log(const char *msg) {
+void send_log_json(const char *msg) {
     if(log_fd < 0) {
         log_fd = socket(AF_INET, SOCK_DGRAM, 0);
         OK(log_fd, "Error creating datagram socket");
@@ -360,7 +350,6 @@ void send_hello(void) {
 
 
     while(connect(socket_fd, (struct sockaddr *) &successor_addr, sizeof(successor_addr)) < 0) {
-        fprintf(stderr, "Error connecting to peer socket: %d %s\n", errno, strerror(errno));
         usleep(500000);
     }
     message *msg = calloc(1, sizeof(message) + sizeof(hello_body));
