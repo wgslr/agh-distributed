@@ -134,7 +134,7 @@ message *read_message(int socket) {
     ssize_t bytes;
     message *buff = calloc(1, sizeof(message) + MAX_BODY_LEN);
     bytes = recv(socket, buff, sizeof(message), 0);
-    OK(bytes, "Error receiving message header")
+    CHECK(bytes, "Error receiving message header")
 
     if(bytes == 0) {
         fprintf(stderr, "Peer closed connection\n");
@@ -146,7 +146,7 @@ message *read_message(int socket) {
 
     if(buff->len > 0) {
         bytes = recv(socket, &buff->data, buff->len, 0);
-        OK(bytes, "Error receiving message body")
+        CHECK(bytes, "Error receiving message body")
         if(bytes < (ssize_t) buff->len) {
             fprintf(stderr, "Received truncated message, ignoring\n");
             free(buff);
