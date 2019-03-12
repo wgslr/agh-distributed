@@ -166,15 +166,15 @@ void handle_message(message *msg) {
     if(msg->type == WITH_PAYLOAD && strcmp(msg->destination_name, node_name) == 0) {
         fprintf(stdout, "Message from %s: %s", msg->source_name, (char *) msg->data);
         free(msg);
-    } else if(strcmp(msg->source_name, node_name) == 0) {
-        if(strcmp(msg->destination_name, BROADCAST_NAME) != 0)
-            fprintf(stdout, "%s could not be reached, discarding message after full circle.\n", msg->destination_name);
-        free(msg);
     } else if(msg->type == OOB_HELLO) {
         // message from an incoming client, insert into normal token-managed flow
         received_token = false;
         msg->type = HELLO;
         push_message(msg);
+    } else if(strcmp(msg->source_name, node_name) == 0) {
+        if(strcmp(msg->destination_name, BROADCAST_NAME) != 0)
+            fprintf(stdout, "%s could not be reached, discarding message after full circle.\n", msg->destination_name);
+        free(msg);
     } else if(msg->type == HELLO) {
         hello_body *body = (hello_body *) msg->data;
         if(eq_addr(&body->successor_addr, &successor_addr)) {
@@ -438,7 +438,7 @@ struct sockaddr_in parse_address(char *addr_str) {
 
 
 void dumpmsg(const message *msg) {
-    fprintf(stderr, "from: %s\nto: %s\nlen: %u\ndata: ", msg->source_name, msg->destination_name, msg->len);
+    fprintf(stderr, "type: %02hX\nfrom: %s\nto: %s\nlen: %u\ndata: ", msg->type, msg->source_name, msg->destination_name, msg->len);
     dumpmem(msg->data, msg->len);
 }
 
