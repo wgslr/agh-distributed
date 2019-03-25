@@ -1,11 +1,13 @@
 package pl.geisler.jgroups;
 
+import javafx.scene.chart.BarChart;
 import org.jgroups.JChannel;
 import org.jgroups.Message;
 import org.jgroups.ReceiverAdapter;
 import org.jgroups.protocols.*;
 import org.jgroups.protocols.pbcast.*;
 import org.jgroups.stack.ProtocolStack;
+import org.jgroups.util.Util;
 
 import java.util.HashMap;
 
@@ -34,9 +36,10 @@ public class DistributedMap implements SimpleStringMap {
 
     @Override
     public void put(String key, Integer value) {
-        String msg = String.format("%s: %d", key, value);
-        Message jMsg = new Message(null, null, msg);
+        ProtocolMessage msg = ProtocolMessage.makePutMessage(key, value);
         try {
+            byte[] buffer = Util.objectToByteBuffer(msg);
+            Message jMsg = new Message(null, buffer);
             commChannel.send(jMsg);
         } catch (Exception e) {
             e.printStackTrace();
@@ -50,11 +53,13 @@ public class DistributedMap implements SimpleStringMap {
 
 
     private void initCommunication() throws Exception {
+        System.setProperty("java.net.preferIPv4Stack", "true");
+
         ReceiverAdapter adapter = new MapReceiveAdapter(store);
 
         commChannel = new JChannel(false);
 
-        ProtocolStack stack=new ProtocolStack();
+        ProtocolStack stack = new ProtocolStack();
         commChannel.setProtocolStack(stack);
         stack.addProtocol(new UDP())
                 .addProtocol(new PING())

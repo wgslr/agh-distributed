@@ -1,8 +1,19 @@
 package pl.geisler.jgroups;
 
-public class ProtocolMessage {
+import java.io.Serializable;
 
-    private enum Type {
+public class ProtocolMessage implements Serializable {
+
+    @Override
+    public String toString() {
+        return "ProtocolMessage{" +
+                "type=" + type +
+                ", key='" + key + '\'' +
+                ", value=" + value +
+                '}';
+    }
+
+    public enum Type {
         PUT,
         REMOVE
     }
@@ -15,7 +26,7 @@ public class ProtocolMessage {
     private ProtocolMessage(Type type, String key, Integer value) {
         this.type = type;
         this.key = key;
-        this.value = 0;
+        this.value = value;
     }
 
     public static ProtocolMessage makePutMessage(String key, Integer value) {
