@@ -24,12 +24,12 @@ public class DistributedMap implements SimpleStringMap {
 
     @Override
     public boolean containsKey(String key) {
-        return false;
+        return store.containsKey(key);
     }
 
     @Override
     public Integer get(String key) {
-        return null;
+        return store.get(key);
     }
 
     @Override
