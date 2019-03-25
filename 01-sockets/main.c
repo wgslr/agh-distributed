@@ -241,13 +241,6 @@ void *tcp_sender(void *args) {
         free(to_send);
     }
 }
-
-bool eq_addr(const struct sockaddr_in *addr1, const struct sockaddr_in *addr2) {
-    return addr1->sin_family == addr2->sin_family &&
-           addr1->sin_port == addr2->sin_port &&
-           addr1->sin_addr.s_addr == addr2->sin_addr.s_addr;
-}
-
 // Adds message to the to-send queue
 int push_message(message *msg) {
     semwait(msg_queue_sem);
@@ -453,5 +446,12 @@ void dumpmem(const void *pointer, const size_t len) {
             fprintf(stderr, " ");
     }
     fprintf(stderr, "\n");
+}
+
+
+bool eq_addr(const struct sockaddr_in *addr1, const struct sockaddr_in *addr2) {
+    return addr1->sin_family == addr2->sin_family &&
+           addr1->sin_port == addr2->sin_port &&
+           addr1->sin_addr.s_addr == addr2->sin_addr.s_addr;
 }
 
