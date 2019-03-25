@@ -5,7 +5,7 @@ public interface SimpleStringMap {
 
     Integer get(String key);
 
-    void put(String key, Integer value);
+    void put(String key, Integer value) throws Exception;
 
     Integer remove(String key);
 }
