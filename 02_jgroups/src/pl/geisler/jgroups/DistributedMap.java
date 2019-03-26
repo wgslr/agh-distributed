@@ -8,6 +8,7 @@ import org.jgroups.protocols.pbcast.*;
 import org.jgroups.stack.ProtocolStack;
 import org.jgroups.util.Util;
 
+import java.net.InetAddress;
 import java.util.HashMap;
 
 public class DistributedMap implements SimpleStringMap {
@@ -59,7 +60,10 @@ public class DistributedMap implements SimpleStringMap {
 
         ProtocolStack stack = new ProtocolStack();
         commChannel.setProtocolStack(stack);
-        stack.addProtocol(new UDP())
+
+        UDP udp = new UDP();
+        udp.setValue("mcast_group_addr", InetAddress.getByName("230.100.200.97"));
+        stack.addProtocol(udp)
                 .addProtocol(new PING())
                 .addProtocol(new MERGE3())
                 .addProtocol(new FD_SOCK())
