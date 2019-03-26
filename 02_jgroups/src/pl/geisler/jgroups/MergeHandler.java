@@ -19,6 +19,8 @@ public class MergeHandler implements Runnable {
 
     @Override
     public void run() {
+        System.err.println("MergeHandler run");
+
         List<View> subgroups = mergeView.getSubgroups();
         subgroups.sort((gr1, gr2) -> {
             if (gr1.size() == gr2.size()) {
@@ -34,6 +36,8 @@ public class MergeHandler implements Runnable {
             if (!main.getMembers().contains(localAddr)) {
                 System.err.println("Resetting node after partitions merge");
                 channel.getState(null, 0);
+            } else {
+                System.err.println("Node is in the main partition after merge");
             }
         } catch (Exception e) {
             e.printStackTrace();

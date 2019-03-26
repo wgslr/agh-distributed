@@ -22,8 +22,6 @@ public class MapReceiveAdapter extends ReceiverAdapter {
     public void receive(Message msg) {
         try {
             ProtocolMessage protoMsg = (ProtocolMessage) Util.objectFromByteBuffer(msg.getBuffer());
-            System.out.println(
-                    "received message from " + msg.getSrc() + ": " + protoMsg.toString());
             handleMessage(protoMsg);
         } catch (Exception e) {
             e.printStackTrace();
