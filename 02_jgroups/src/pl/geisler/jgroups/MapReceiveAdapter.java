@@ -21,8 +21,6 @@ public class MapReceiveAdapter extends ReceiverAdapter {
             System.out.println(
                     "received message from " + msg.getSrc() + ": " + protoMsg.toString());
             handleMessage(protoMsg);
-
-            System.out.println(store.toString());
         } catch (Exception e) {
             e.printStackTrace();
         }

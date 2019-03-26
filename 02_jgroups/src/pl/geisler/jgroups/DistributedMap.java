@@ -37,20 +37,16 @@ public class DistributedMap implements SimpleStringMap {
     @Override
     public void put(String key, Integer value) {
         ProtocolMessage msg = ProtocolMessage.makePutMessage(key, value);
-        try {
-            byte[] buffer = Util.objectToByteBuffer(msg);
-            Message jMsg = new Message(null, buffer);
-            commChannel.send(jMsg);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        sendMsg(msg);
     }
 
     @Override
     public Integer remove(String key) {
-        return null;
+        Integer removedValue = store.get(key);
+        ProtocolMessage msg = ProtocolMessage.makeRemoveMessage(key);
+        sendMsg(msg);
+        return removedValue;
     }
-
 
     private void initCommunication() throws Exception {
         System.setProperty("java.net.preferIPv4Stack", "true");
@@ -81,5 +77,21 @@ public class DistributedMap implements SimpleStringMap {
         commChannel.setReceiver(adapter);
 
         commChannel.connect(CLUSTER_NAME);
+    }
+
+
+    private void sendMsg(ProtocolMessage msg) {
+        try {
+            byte[] buffer = Util.objectToByteBuffer(msg);
+            Message jMsg = new Message(null, buffer);
+            commChannel.send(jMsg);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "DistributedMap " + store.toString();
     }
 }
