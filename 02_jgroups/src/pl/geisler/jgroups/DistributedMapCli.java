@@ -35,6 +35,9 @@ public class DistributedMapCli {
                         key = scanner.next();
                         System.out.println(theMap.remove(key));
                         break;
+                    case "exit":
+                        theMap.close();
+                        return;
                     default:
                         System.out.println(
                                 String.format("Unknown operation '%s'", operation.toLowerCase()));

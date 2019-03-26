@@ -48,6 +48,10 @@ public class DistributedMap implements SimpleStringMap {
         return removedValue;
     }
 
+    public void close() {
+        commChannel.close();
+    }
+
     private void initCommunication() throws Exception {
         System.setProperty("java.net.preferIPv4Stack", "true");
 
