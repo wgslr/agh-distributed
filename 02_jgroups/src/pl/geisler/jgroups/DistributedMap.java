@@ -51,7 +51,7 @@ public class DistributedMap implements SimpleStringMap {
     private void initCommunication() throws Exception {
         System.setProperty("java.net.preferIPv4Stack", "true");
 
-        ReceiverAdapter adapter = new MapReceiveAdapter(store);
+        ReceiverAdapter adapter = new MapReceiveAdapter(store, commChannel);
 
         commChannel = new JChannel(false);
 

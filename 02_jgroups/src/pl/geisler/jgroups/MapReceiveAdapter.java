@@ -1,8 +1,6 @@
 package pl.geisler.jgroups;
 
-import org.jgroups.Message;
-import org.jgroups.ReceiverAdapter;
-import org.jgroups.View;
+import org.jgroups.*;
 import org.jgroups.util.Util;
 
 import java.io.DataInputStream;
@@ -13,9 +11,11 @@ import java.util.HashMap;
 
 public class MapReceiveAdapter extends ReceiverAdapter {
     final private HashMap<String, Integer> store;
+    final private JChannel channel;
 
-    public MapReceiveAdapter(HashMap<String, Integer> store) {
+    public MapReceiveAdapter(HashMap<String, Integer> store, JChannel channel) {
         this.store = store;
+        this.channel = channel;
     }
 
     @Override
@@ -53,6 +53,12 @@ public class MapReceiveAdapter extends ReceiverAdapter {
     public void viewAccepted(View view) {
         super.viewAccepted(view);
         System.out.println("View accepted: " + view.toString());
+
+        if(view instanceof MergeView) {
+            MergeView concreteView = (MergeView) view;
+            MergeHandler handler = new MergeHandler(concreteView, channel);
+            new Thread(handler).run();
+        }
     }
 
     private void handleMessage(ProtocolMessage protoMsg) {
