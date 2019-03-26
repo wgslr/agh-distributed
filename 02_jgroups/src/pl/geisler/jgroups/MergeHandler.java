@@ -5,6 +5,7 @@ import org.jgroups.JChannel;
 import org.jgroups.MergeView;
 import org.jgroups.View;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public class MergeHandler implements Runnable {
@@ -21,7 +22,7 @@ public class MergeHandler implements Runnable {
     public void run() {
         System.err.println("MergeHandler run");
 
-        List<View> subgroups = mergeView.getSubgroups();
+        List<View> subgroups = new LinkedList<>(mergeView.getSubgroups());
         subgroups.sort((gr1, gr2) -> {
             if (gr1.size() == gr2.size()) {
                 return gr1.compareTo(gr2);

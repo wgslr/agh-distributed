@@ -1,6 +1,5 @@
 package pl.geisler.jgroups;
 
-import javafx.scene.chart.BarChart;
 import org.jgroups.JChannel;
 import org.jgroups.Message;
 import org.jgroups.ReceiverAdapter;
@@ -55,9 +54,8 @@ public class DistributedMap implements SimpleStringMap {
     private void initCommunication() throws Exception {
         System.setProperty("java.net.preferIPv4Stack", "true");
 
-        ReceiverAdapter adapter = new MapReceiveAdapter(store, commChannel);
-
         commChannel = new JChannel(false);
+        ReceiverAdapter adapter = new MapReceiveAdapter(store, commChannel);
 
         ProtocolStack stack = new ProtocolStack();
         commChannel.setProtocolStack(stack);
@@ -76,7 +74,6 @@ public class DistributedMap implements SimpleStringMap {
                 .addProtocol(new MFC())
                 .addProtocol(new FRAG2())
                 .addProtocol(new STATE())
-                .addProtocol(new SEQUENCER())
                 .addProtocol(new FLUSH());
 
         stack.init();
