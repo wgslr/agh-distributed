@@ -5,10 +5,14 @@ import org.jgroups.ReceiverAdapter;
 import org.jgroups.View;
 import org.jgroups.util.Util;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 
 public class MapReceiveAdapter extends ReceiverAdapter {
-    HashMap<String, Integer> store;
+    final private HashMap<String, Integer> store;
 
     public MapReceiveAdapter(HashMap<String, Integer> store) {
         this.store = store;
@@ -25,6 +29,24 @@ public class MapReceiveAdapter extends ReceiverAdapter {
             e.printStackTrace();
         }
 
+    }
+
+    @Override
+    public void getState(OutputStream output) throws Exception {
+        synchronized (store) {
+            Util.objectToStream(store, new DataOutputStream(output));
+        }
+    }
+
+    @Override
+    public void setState(InputStream input) throws Exception {
+        synchronized (store) {
+            DataInputStream inputStream = new DataInputStream(input);
+            HashMap<String, Integer> state = (HashMap<String, Integer>)
+                    Util.objectFromStream(inputStream);
+            store.clear();
+            store.putAll(state);
+        }
     }
 
     @Override

@@ -71,6 +71,7 @@ public class DistributedMap implements SimpleStringMap {
                 .addProtocol(new UFC())
                 .addProtocol(new MFC())
                 .addProtocol(new FRAG2())
+                .addProtocol(new STATE())
                 .addProtocol(new SEQUENCER())
                 .addProtocol(new FLUSH());
 
@@ -78,7 +79,7 @@ public class DistributedMap implements SimpleStringMap {
 
         commChannel.setReceiver(adapter);
 
-        commChannel.connect(CLUSTER_NAME);
+        commChannel.connect(CLUSTER_NAME, null, 0);
     }
 
 
