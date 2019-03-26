@@ -70,7 +70,9 @@ public class DistributedMap implements SimpleStringMap {
                 .addProtocol(new GMS())
                 .addProtocol(new UFC())
                 .addProtocol(new MFC())
-                .addProtocol(new FRAG2());
+                .addProtocol(new FRAG2())
+                .addProtocol(new SEQUENCER())
+                .addProtocol(new FLUSH());
 
         stack.init();
 
