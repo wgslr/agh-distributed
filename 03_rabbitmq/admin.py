@@ -4,32 +4,29 @@ import pika
 import sys
 import datetime
 
+from interactive_server import InteractiveServer
 import common
 from common import errprint
 
 
-def on_receive(ch, method, properties, body):
-    time = datetime.datetime.now()
-    print('{}: {}'.format(time, {'body': body, 'timestamp': properties.timestamp}))
+class Admin(InteractiveServer):
+    def __init__(self):
+        # matching 2-word keys filters out 'info'
+        queues = [('*.*', self._log)]
+        super().__init__(self._handle_line, queues)
+
+    def _handle_line(self, line):
+        self.channel.basic_publish(exchange=common.EXCHANGE,
+                                   routing_key='info',
+                                   body=line)
+
+    def _log(self, ch, method, properties, body):
+        time = datetime.datetime.now()
+
+        print('[{}] key: {}: {}'.format(
+            time, method.routing_key, body.decode()))
 
 
 if __name__ == '__main__':
-    # TODO send broadcast messages
-
-    _, channel = common.connect()
-
-    routing_key = '#'
-    queue_name = ''
-
-    errprint("binding queue")
-    channel.queue_declare(queue_name)
-    channel.queue_bind(exchange=common.EXCHANGE,
-                        queue=queue_name, routing_key=routing_key)
-    errprint("bound queue")
-    channel.basic_consume(
-        queue=queue_name, on_message_callback=on_receive, auto_ack=True)
-
-    try:
-        channel.start_consuming()
-    except KeyboardInterrupt:
-        pass
+    admin = Admin()
+    admin.start()
