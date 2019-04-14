@@ -30,4 +30,7 @@ if __name__ == '__main__':
         channel.basic_consume(
             queue=queue_name, on_message_callback=make_skill_callback(skill), auto_ack=True)
 
-    channel.start_consuming()
+    try:
+        channel.start_consuming()
+    except KeyboardInterrupt:
+        pass
