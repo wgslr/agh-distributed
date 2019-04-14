@@ -2,41 +2,105 @@
 
 import pika
 import sys
+import select
+import time
 
 import common
 from common import errprint
+from pika.adapters.select_connection import PollEvents
 
 
-def make_resp_queue(channel):
-    queue_name = ''
+class Doctor:
+    def __init__(self):
+        self.connection = None
+        self.channel = None
 
-    errprint("binding queue")
-    result = channel.queue_declare(queue_name, exclusive=True)
-    queue_name = result.method.queue
-    print("obtained quee {}".format(queue_name))
+    def start(self):
+        self.connection = pika.SelectConnection(
+            pika.ConnectionParameters(host='localhost'), on_open_callback=self._on_connected)
 
-    channel.queue_bind(exchange=common.EXCHANGE,
-                       queue=queue_name, routing_key=queue_name)
+        # self.connection.ioloop.call_later(3, self._on_later)
+        self.connection.ioloop.start()
 
-    return queue_name
+    def _on_later(self):
+        # print("Am later")
+        skill = sys.argv[1]
+        print("checking stdin")
+
+
+        if select.select([sys.stdin,],[],[],0.0)[0]:
+            print("Have data!")
+            content = sys.stdin.readline().strip()
+            try:
+                self.channel.basic_publish(exchange=common.EXCHANGE, routing_key='request.{}'.format(skill),
+                                        body=content + ': {}'.format(skill), properties=pika.BasicProperties(reply_to=self.queue_name))
+                #    body='some body: {}'.format(skill), properties=pika.BasicProperties())
+            except Exception as err:
+                print("Err ", err)
+            else:
+                print("sent")
+        else:
+            print("No data")
+            # print(lines)
+        self.connection.ioloop.call_later(1, self._on_later)
+
+    def _on_connected(self, connection):
+        errprint("connected")
+        self.connection.channel(on_open_callback=self._on_channel_open)
+
+    def _on_channel_open(self, channel):
+        errprint("channel open")
+        self.channel = channel
+        self.channel.add_on_close_callback(self._on_channel_closed)
+        self.channel.exchange_declare(exchange=common.EXCHANGE, exchange_type='topic',
+                                      callback=self._on_exchange_declared)
+
+        self.connection.ioloop.call_later(1, self._on_later)
+
+        errprint("channel open2")
+
+    def _on_exchange_declared(self, frame):
+        errprint("exchange declared")
+        self.channel.queue_declare('', callback=self._on_queue_declared)
+        errprint("exchange declared2")
+
+    def _on_queue_declared(self, result):
+        errprint("queue declared")
+        self.queue_name = result.method.queue
+        self.channel.queue_bind(exchange=common.EXCHANGE,
+                                queue=self.queue_name, routing_key=self.queue_name,
+                                callback=self._on_queue_bind)
+
+    def _on_queue_bind(self, result):
+        errprint("queue bound")
+        self.channel.basic_consume(queue=self.queue_name, auto_ack=True,
+                                   on_message_callback=on_results)
+
+    def _on_channel_closed(self, channel, reason):
+        self.channel = None
+        errprint("Channel closed because of ", reason)
 
 
 def on_results(ch, method, properties, body):
     print(body.decode())
 
 
+def on_stdin(fd, events):
+    print("stdin happened")
+
+
 if __name__ == '__main__':
     # TODO read requests in a loop
 
-    connection, channel = common.connect()
-    skill = sys.argv[1]
-
-    respq = make_resp_queue(channel)
-
-    channel.basic_publish(exchange=common.EXCHANGE, routing_key='request.{}'.format(skill),
-                          body='some body: {}'.format(skill), properties=pika.BasicProperties(reply_to=respq))
-    channel.basic_consume(queue=respq, auto_ack=True,
-                          on_message_callback=on_results)
-
-    while True:
-        connection.process_data_events()
+    d = Doctor()
+    d.start()
+    # try:
+    #     connection.ioloop.add_handler(
+    #         sys.stdin, on_stdin, PollEvents.READ | PollEvents.WRITE)
+    #     # Loop so we can communicate with RabbitMQ
+    #     connection.ioloop.start()
+    # except KeyboardInterrupt:
+    #     # Gracefully close the connection
+    #     connection.close()
+    #     # Loop until we're fully closed, will stop on its own
+    #     connection.ioloop.start()

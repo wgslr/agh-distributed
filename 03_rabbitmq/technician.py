@@ -2,6 +2,7 @@
 
 import pika
 import sys
+import time
 
 import common
 from common import errprint
@@ -14,6 +15,7 @@ def make_skill_callback(skill):
 
         reply_to = properties.reply_to
         # TODO correlation id
+        time.sleep(2)
         ch.basic_publish(exchange=common.EXCHANGE,
                          routing_key=reply_to,
                          body=bodystr + " DONE")

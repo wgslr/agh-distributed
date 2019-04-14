@@ -3,6 +3,7 @@ artefacts
 main
 .idea
 .vscode
+venv
 
 
 
