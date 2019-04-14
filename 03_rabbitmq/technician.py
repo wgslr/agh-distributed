@@ -9,21 +9,16 @@ from common import errprint
 
 def make_skill_callback(skill):
     def callback(ch, method, properties, body):
-        errprint("handling message {} regarding skill {}".format(body, skill))
+        errprint("handling message {} regarding skill {}".format(body.decode('utf8'), skill))
     return callback
 
 
 if __name__ == '__main__':
     # TODO listen for INFO messages
     # TODO send replies to requests
+    channel = common.get_channel()
 
-    connection = pika.BlockingConnection(
-        pika.ConnectionParameters(host='localhost'))
-    channel = connection.channel()
-
-    channel.exchange_declare(exchange=common.EXCHANGE, exchange_type='topic')
-
-    for skill in sys.argv[1:]:
+    for skill in sys.argv[1:3]:
         errprint("Binding skill {}".format(skill))
 
         routing_key = 'request.#.{}'.format(skill)
