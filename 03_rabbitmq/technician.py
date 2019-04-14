@@ -29,10 +29,18 @@ def make_skill_callback(skill):
     return callback
 
 
+def on_info(ch, method, properties, body):
+    print("[INFO] {}".format(body.decode()))
+
+
 if __name__ == '__main__':
     # TODO listen for INFO messages
     _connection, channel = common.connect()
 
+    channel.queue_declare('', exclusive=True)
+    channel.queue_bind(exchange=common.EXCHANGE, queue='', routing_key='info')
+    channel.basic_consume(
+        queue='', on_message_callback=on_info, auto_ack=True)
     for skill in sys.argv[1:3]:
         errprint("Binding skill {}".format(skill))
 
