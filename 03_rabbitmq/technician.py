@@ -9,14 +9,22 @@ from common import errprint
 
 def make_skill_callback(skill):
     def callback(ch, method, properties, body):
-        errprint("handling message {} regarding skill {}".format(body.decode('utf8'), skill))
+        bodystr = body.decode()
+        errprint("handling message {} regarding skill {}".format(bodystr, skill))
+
+        reply_to = properties.reply_to
+        # TODO correlation id
+        ch.basic_publish(exchange=common.EXCHANGE,
+                         routing_key=reply_to,
+                         body=bodystr + " DONE")
+
     return callback
 
 
 if __name__ == '__main__':
     # TODO listen for INFO messages
     # TODO send replies to requests
-    channel = common.get_channel()
+    _connection, channel = common.connect()
 
     for skill in sys.argv[1:3]:
         errprint("Binding skill {}".format(skill))

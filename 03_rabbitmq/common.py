@@ -10,7 +10,7 @@ def errprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
 
-def get_channel():
+def connect():
     """Initializes rabbitmq connection and ensures the common exchange exists"""
 
     connection = pika.BlockingConnection(
@@ -18,4 +18,4 @@ def get_channel():
     channel = connection.channel()
 
     channel.exchange_declare(exchange=EXCHANGE, exchange_type='topic')
-    return channel
+    return connection, channel

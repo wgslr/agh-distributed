@@ -16,7 +16,7 @@ def on_receive(ch, method, properties, body):
 if __name__ == '__main__':
     # TODO send broadcast messages
 
-    channel = common.get_channel()
+    _, channel = common.connect()
 
     routing_key = '#'
     queue_name = ''
