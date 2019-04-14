@@ -25,7 +25,10 @@ def get_injury(line: str) -> dict:
 
 class Doctor(InteractiveServer):
     def __init__(self):
-        queues = [('', self._on_result)]
+        queues = [
+            ('', self._on_result),
+            ('info', self._on_info)
+        ]
         super().__init__(self._handle_line, queues)
 
     def _handle_line(self, line):
@@ -41,11 +44,12 @@ class Doctor(InteractiveServer):
                                        properties=properties)
 
     def _on_result(self, ch, method, properties, body):
-        print("doctor recevied: ", body.decode())
+        print("result recevied: ", body.decode())
+
+    def _on_info(self, ch, method, properties, body):
+        print("[INFO] {}".format(body.decode()))
 
 
 if __name__ == '__main__':
-    # TODO handle INFO
-
-    d = Doctor()
-    d.start()
+    doctor = Doctor()
+    doctor.start()

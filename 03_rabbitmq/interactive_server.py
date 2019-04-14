@@ -84,15 +84,13 @@ class InteractiveServer:
 
     def _declare_queues(self):
         for key, callback in self.queues_spec:
-            def on_declared(result):
+            def on_declared(result, key=key, callback=callback):
                 return self._on_queue_declared(result, key, callback)
 
-            self.channel.queue_declare('', exclusive=True,
+            self.channel.queue_declare(key, exclusive=True,
                                        callback=on_declared)
 
     def _on_queue_declared(self, result, routing_key, msg_callback):
-        errprint("Queue for responses declared")
-
         queue_name = result.method.queue
         if routing_key == '':
             routing_key = queue_name
