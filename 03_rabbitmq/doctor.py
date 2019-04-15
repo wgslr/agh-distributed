@@ -44,7 +44,7 @@ class Doctor(InteractiveServer):
                                        properties=properties)
 
     def _on_result(self, ch, method, properties, body):
-        print("result recevied: ", body.decode())
+        print("result received: ", body.decode())
 
     def _on_info(self, ch, method, properties, body):
         print("[INFO] {}".format(body.decode()))

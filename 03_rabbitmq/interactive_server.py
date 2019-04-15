@@ -70,7 +70,7 @@ class InteractiveServer:
             def on_declared(result, key=key, callback=callback):
                 return self._on_queue_declared(result, key, callback)
 
-            self.channel.queue_declare(key,
+            self.channel.queue_declare('',
                                        exclusive=True,
                                        callback=on_declared)
 
