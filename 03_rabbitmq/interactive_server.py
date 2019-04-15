@@ -11,7 +11,7 @@ from typing import Optional, Callable, Tuple
 
 import common
 from common import errprint
-from pika.adapters.select_connection import PollEvents
+from pika.channel import Channel
 
 
 def maybe_read_stdin() -> Optional[str]:
@@ -30,8 +30,8 @@ class InteractiveServer:
 
     def __init__(self, stdin_handler: Callable, queues_spec: Tuple[str, Callable]):
         self.POLL_PERIOD = 0.1
-        self.connection = None
-        self.channel = None
+        self.connection: pika.SelectConnection = None
+        self.channel: Optional[Channel] = None
         self.queues_spec = queues_spec
         self.stdin_handler = stdin_handler
 
