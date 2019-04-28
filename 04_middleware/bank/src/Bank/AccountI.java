@@ -2,12 +2,20 @@ package Bank;
 import com.zeroc.Ice.Current;
 
 public class AccountI implements Account {
-    private static final long serialVersionUID = -2448962912780867770L;
+    private static final long serialVersionUID = -2448062912780867770L;
+
+    public final String ownerPesel;
+    public final String ownerName;
+    protected MoneyAmount balance;
+
+    public AccountI(String ownerPesel, String ownerName, MoneyAmount balance) {
+        this.ownerPesel = ownerPesel;
+        this.ownerName = ownerName;
+        this.balance = balance;
+    }
+
     @Override
     public MoneyAmount getBalance(Current current) {
-        MoneyAmount ma = new MoneyAmount();
-        ma.currency = Currency.PLN;
-        ma.minorUnitAmount = 3300;
-        return ma;
+        return balance;
     }
 }

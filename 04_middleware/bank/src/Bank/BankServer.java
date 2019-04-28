@@ -6,25 +6,27 @@ import com.zeroc.Ice.ObjectAdapter;
 import com.zeroc.Ice.Util;
 
 public class BankServer {
-    public void start(String[] args)
-    {
+    public void start(String[] args) {
         int status = 0;
         Communicator communicator = null;
 
-        try
-        {
+        try {
             // 1. Inicjalizacja ICE - utworzenie communicatora
             communicator = Util.initialize(args);
 
             // 2. Konfiguracja adaptera
-            // METODA 1 (polecana produkcyjnie): Konfiguracja adaptera Adapter1 jest w pliku konfiguracyjnym podanym jako parametr uruchomienia serwera
+            // METODA 1 (polecana produkcyjnie): Konfiguracja adaptera Adapter1 jest w pliku
+            // konfiguracyjnym podanym jako parametr uruchomienia serwera
             //Ice.ObjectAdapter adapter = communicator.createObjectAdapter("Adapter1");
 
-            // METODA 2 (niepolecana, dopuszczalna testowo): Konfiguracja adaptera Adapter1 jest w kodzie ródłowym
-            ObjectAdapter adapter = communicator.createObjectAdapterWithEndpoints("Adapter1", "tcp -h localhost -p 10001:udp -h localhost -p 10001");
+            // METODA 2 (niepolecana, dopuszczalna testowo): Konfiguracja adaptera Adapter1 jest
+            // w kodzie ródłowym
+            ObjectAdapter adapter = communicator.createObjectAdapterWithEndpoints("Adapter1",
+                    "tcp -h localhost -p 10001:udp -h localhost -p 10001");
 
             // 3. Stworzenie serwanta/serwantów
-            AccountI accountServant = new AccountI();
+            AccountI accountServant = new AccountI("somepesel", "w",
+                    new MoneyAmount(3, Currency.PLN));
 
 
             // 4. Dodanie wpisów do tablicy ASM
@@ -37,22 +39,16 @@ public class BankServer {
 
             communicator.waitForShutdown();
 
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.err.println(e);
             status = 1;
         }
-        if (communicator != null)
-        {
+        if (communicator != null) {
             // Clean up
             //
-            try
-            {
+            try {
                 communicator.destroy();
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 System.err.println(e);
                 status = 1;
             }
@@ -61,8 +57,7 @@ public class BankServer {
     }
 
 
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         BankServer app = new BankServer();
         app.start(args);
     }
