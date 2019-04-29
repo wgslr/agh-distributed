@@ -5,4 +5,8 @@ public class PremiumAccountI extends AccountI {
         super(ownerPesel, ownerName, balance);
     }
 
+    @Override
+    boolean isPremium() {
+        return false;
+    }
 }

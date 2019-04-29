@@ -6,13 +6,25 @@ Ice.loadSlice('../api/bank.ice')
 import Bank
 
 with Ice.initialize(sys.argv) as communicator:
-    proxy = communicator.stringToProxy('standard/somepesel:tcp -h localhost -p 10001:udp -h localhost -p 10001')
-    print('got proxy')
-    account = Bank.AccountPrx.checkedCast(proxy)
-    print('got account')
+    factory_prx = communicator.stringToProxy('accfac/accountfactory:tcp -h localhost -p 10001:udp -h localhost -p 10001')
+    print(factory_prx)
+    factory = Bank.AccountFactoryPrx.checkedCast(factory_prx)
+    print(factory)
+    income = Bank.MoneyAmount(10000, Bank.Currency.PLN)
+    result = factory.createAccount("w", "g", "1234", income)
+    print(result)
+    key = result.key
+    account = result.account
 
+
+
+    # proxy = communicator.stringToProxy('standard/somepesel:tcp -h localhost -p 10001:udp -h localhost -p 10001')
+    # print('got proxy')
+    # account = Bank.AccountPrx.checkedCast(proxy)
+    # print('got account')
+
+    print("getting balance")
     balance= account.getBalance()
     print(balance)
-    print('got account')
     print(balance.minorUnitAmount)
 

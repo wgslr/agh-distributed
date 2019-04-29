@@ -22,10 +22,17 @@ module Bank
         // TODO loan request
     }
 
-    interface AccountFactory {
-        Account* createAccount(string pesel, MoneyAmount monthlyIncome);
+    struct AccountCreationResult {
+        Account* account;
+        bool isPremium;
+        string key;
     }
-    
+
+    interface AccountFactory {
+        AccountCreationResult createAccount(string firstName, string lastName,
+                string PESEL, MoneyAmount monthlyIncome);
+    }
+
 };
 
 #endif
