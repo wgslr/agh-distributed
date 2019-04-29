@@ -24,13 +24,19 @@ public class BankServer {
             ObjectAdapter adapter = communicator.createObjectAdapterWithEndpoints("Adapter1",
                     "tcp -h localhost -p 10001:udp -h localhost -p 10001");
 
-            // 3. Stworzenie serwanta/serwantów
-            AccountI accountServant = new AccountI("somepesel", "w",
-                    new MoneyAmount(3, Currency.PLN));
+//            // 3. Stworzenie serwanta/serwantów
+//            AccountI accountServant = new AccountI("somepesel", "w",
+//                    new MoneyAmount(3, Currency.PLN));
+
+            Accounts locator = new Accounts();
+            adapter.addServantLocator(locator, "premium");
+            adapter.addServantLocator(locator, "standard");
 
 
+            locator.createAccount("jan", "kowalski", "somepesel", new MoneyAmount(3000,
+                    Currency.PLN));
             // 4. Dodanie wpisów do tablicy ASM
-            adapter.add(accountServant, new Identity("somepesel", "standard"));
+//            adapter.add(accountServant, new Identity("somepesel", "standard"));
 
             // 5. Aktywacja adaptera i przejcie w pętlę przetwarzania żšdań
             adapter.activate();

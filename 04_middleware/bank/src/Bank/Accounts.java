@@ -1,9 +1,14 @@
 package Bank;
 
+import com.zeroc.Ice.Current;
+import com.zeroc.Ice.Object;
+import com.zeroc.Ice.ServantLocator;
+import com.zeroc.Ice.UserException;
+
 import java.util.HashMap;
 import java.util.Map;
 
-public class Accounts {
+public class Accounts implements ServantLocator {
 
     private final static Currency BASE_CURRENCY = Currency.PLN;
     private final static MoneyAmount PREMIUM_THRESHOLD =
@@ -37,6 +42,37 @@ public class Accounts {
         return newAccount;
     }
 
+    Account findStandardAccount(String PESEL) {
+        return standardAccounts.get(PESEL);
     }
 
+    Account findPremiumAccount(String PESEL) {
+        return premiumAccounts.get(PESEL);
+    }
+
+    @Override
+    public LocateResult locate(Current current) throws UserException {
+        Map<String, Account> collection;
+        if(current.id.category.equals("premium")) {
+            collection = premiumAccounts;
+        } else if (current.id.category.equals("standard")) {;
+            collection = standardAccounts;
+        } else {
+            // TODO use an Ice or custom exception
+            throw new IllegalArgumentException();
+        }
+
+        String PESEL = current.id.name;
+        return new LocateResult(collection.get(PESEL), null);
+    }
+
+    @Override
+    public void finished(Current current, Object object, java.lang.Object o) throws UserException {
+
+    }
+
+    @Override
+    public void deactivate(String s) {
+
+    }
 }
