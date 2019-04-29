@@ -9,8 +9,8 @@ public class Accounts {
     private final static MoneyAmount PREMIUM_THRESHOLD =
             new MoneyAmount(100000, BASE_CURRENCY);
 
-    Map<String, Account> standardAccounts = new HashMap<>();
-    Map<String, Account> premiumAccounts = new HashMap<>();
+    private Map<String, Account> standardAccounts = new HashMap<>();
+    private Map<String, Account> premiumAccounts = new HashMap<>();
 
 
     Account createAccount(String firstName, String lastName, String PESEL,
@@ -26,11 +26,17 @@ public class Accounts {
         MoneyAmount balance = new MoneyAmount(
                 monthlyIncome.minorUnitAmount * 10, monthlyIncome.currency);
 
+        Account newAccount;
         if (monthlyIncome.minorUnitAmount >= PREMIUM_THRESHOLD.minorUnitAmount) {
-            return new PremiumAccountI(PESEL, name, balance);
+            newAccount = new PremiumAccountI(PESEL, name, balance);
+            premiumAccounts.put(PESEL, newAccount);
         } else {
-            return new AccountI(PESEL, name, balance);
+            newAccount = new AccountI(PESEL, name, balance);
+            standardAccounts.put(PESEL, newAccount);
         }
+        return newAccount;
+    }
+
     }
 
 }
