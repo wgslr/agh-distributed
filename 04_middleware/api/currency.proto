@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "currencytracker";
+option java_outer_classname = "CurrencyTrackerProto";
+
+
+enum Currency {
+    PLN = 0;
+    EUR = 1;
+    USD = 2;
+    GBP = 3;
+    HRK = 4;
+}
+
+message Rate {
+    Currency base = 1;
+    Currency foreign = 2;
+    double foreign_to_base = 3;
+}
+
+message SubscribeArgs {
+    Currency base = 1;
+    repeated Currency tracked = 2;
+}
+
+service ExchangeRates {
+    rpc Subscribe (SubscribeArgs) returns (stream Rate);
+}
+

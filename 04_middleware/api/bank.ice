@@ -3,7 +3,7 @@
 
 module Bank
 {
-    enum Currency { PLN, EUR, USD, GBP }
+    enum Currency { PLN, EUR, USD, GBP, HRK }
 
     struct MoneyAmount {
         // i.e. for 100 PLN this field contains number of Grosz's (10000)
