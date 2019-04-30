@@ -7,6 +7,10 @@ import com.zeroc.Ice.Util;
 
 public class BankServer {
     public void start(String[] args) {
+        CurrencyTrackerClient currencyTrackerClient = new CurrencyTrackerClient(20000);
+        currencyTrackerClient.trackChanges();
+
+
         int status = 0;
         Communicator communicator = null;
 
