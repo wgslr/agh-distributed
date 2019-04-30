@@ -1,4 +1,4 @@
-package Bank;
+package bank;
 
 import com.zeroc.Ice.Current;
 

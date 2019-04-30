@@ -1,10 +1,6 @@
-package Bank;
+package bank;
 
 import com.zeroc.Ice.*;
-import com.zeroc.Ice.Object;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class AccountFactoryI implements AccountFactory {
 

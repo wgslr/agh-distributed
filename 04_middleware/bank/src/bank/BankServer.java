@@ -1,4 +1,4 @@
-package Bank;
+package bank;
 
 import com.zeroc.Ice.Communicator;
 import com.zeroc.Ice.Identity;

@@ -1,7 +1,7 @@
 #ifndef BANK_ICE
 #define BANK_ICE
 
-module Bank
+module bank
 {
     enum Currency { PLN, EUR, USD, GBP, HRK }
 
