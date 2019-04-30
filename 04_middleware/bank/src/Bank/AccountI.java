@@ -18,16 +18,25 @@ public class AccountI implements Account {
     }
 
     @Override
-    public MoneyAmount getBalance(Current current) {
+    public MoneyAmount getBalance(Current current) throws AuthenticationException {
+        checkAuthentication(current);
         return balance;
     }
 
+    public boolean isPremium() {
+        return false;
+    }
+
+    protected void checkAuthentication(Current current) throws AuthenticationException {
+        String key = current.ctx.get("key");
+        if (key == null || !key.equals(this.key)) {
+            // TODO  descriptive excepion class
+            throw new AuthenticationException();
+        }
+
+    }
 
     private static String generateKey() {
         return Long.toHexString(Double.doubleToLongBits(Math.random()));
-    }
-
-    boolean isPremium() {
-        return false;
     }
 }

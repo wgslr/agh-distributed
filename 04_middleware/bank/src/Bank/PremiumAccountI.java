@@ -6,7 +6,7 @@ public class PremiumAccountI extends AccountI {
     }
 
     @Override
-    boolean isPremium() {
+    public boolean isPremium() {
         return false;
     }
 }

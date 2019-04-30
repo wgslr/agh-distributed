@@ -22,7 +22,7 @@ public class BankServer {
             // METODA 2 (niepolecana, dopuszczalna testowo): Konfiguracja adaptera Adapter1 jest
             // w kodzie ródłowym
             ObjectAdapter adapter = communicator.createObjectAdapterWithEndpoints("Adapter1",
-                    "tcp -h localhost -p 10001:udp -h localhost -p 10001");
+                    "tcp -h localhost -p 10000:udp -h localhost -p 10000");
 
 //            // 3. Stworzenie serwanta/serwantów
 //            AccountI accountServant = new AccountI("somepesel", "w",

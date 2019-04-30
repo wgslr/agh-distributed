@@ -12,9 +12,11 @@ module Bank
         Currency currency;
     }
 
+    exception AuthenticationException {}
+
     interface Account
     {
-        idempotent MoneyAmount getBalance();
+        idempotent MoneyAmount getBalance() throws AuthenticationException;
     }
 
     interface PremiumAccount extends Account
