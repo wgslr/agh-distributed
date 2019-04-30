@@ -9,5 +9,8 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="com.zeroc:ice:3.7.2" level="project" />
+    <orderEntry type="library" name="io.grpc:grpc-netty-shaded:1.20.0" level="project" />
+    <orderEntry type="library" name="io.grpc:grpc-protobuf:1.20.0" level="project" />
+    <orderEntry type="library" name="io.grpc:grpc-stub:1.20.0" level="project" />
   </component>
 </module>
