@@ -16,7 +16,7 @@ with Ice.initialize(sys.argv) as communicator:
     key = result.key
     account = result.account
 
-    result2 = factory.createAccount("w", "g", "1234", income)
+    result2 = factory.createAccount("wewe", "g", "12345", income)
     print(result2)
     key2 = result2.key
     account2 = result2.account

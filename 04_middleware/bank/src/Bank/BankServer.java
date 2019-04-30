@@ -10,6 +10,8 @@ public class BankServer {
         int status = 0;
         Communicator communicator = null;
 
+        String port = args.length > 0 ? args[0] : "10000";
+
         try {
             // 1. Inicjalizacja ICE - utworzenie communicatora
             communicator = Util.initialize(args);
@@ -22,7 +24,7 @@ public class BankServer {
             // METODA 2 (niepolecana, dopuszczalna testowo): Konfiguracja adaptera Adapter1 jest
             // w kodzie ródłowym
             ObjectAdapter adapter = communicator.createObjectAdapterWithEndpoints("Adapter1",
-                    "tcp -h localhost -p 10000:udp -h localhost -p 10000");
+                    String.format("tcp -h localhost -p %s:udp -h localhost -p %s", port, port));
 
 //            // 3. Stworzenie serwanta/serwantów
 //            AccountI accountServant = new AccountI("somepesel", "w",
