@@ -1,3 +1,6 @@
+GRPC_JAVA_PATH=/usr/local/bin/protoc-gen-grpc-java-0.15.0-linux-x86_64.exe
+PROTOC_FLAGS=--plugin=protoc-gen-grpc-java=$(GRPC_JAVA_PATH)
+
 all: clean slice proto
 
 .PHONY: slice proto clean
@@ -11,4 +14,5 @@ slice: api/*.ice
 
 proto: api/*.proto
 	mkdir -p {currencytracker,bank}/generated
-	protoc --java_out=currencytracker/generated --java_out=bank/generated $^
+	protoc $(PROTOC_FLAGS) --java_out=currencytracker/generated --grpc-java_out=currencytracker/generated  $^
+	protoc $(PROTOC_FLAGS) --java_out=bank/generated --grpc-java_out=bank/generated $^
