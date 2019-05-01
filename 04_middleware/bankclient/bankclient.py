@@ -6,6 +6,9 @@ Ice.loadSlice('../api/bank.ice')
 import bank
 
 with Ice.initialize(sys.argv) as communicator:
+    # TODO make the client interactive  to switch between accounts
+    # TODO read server port from commandline
+
     factory_prx = communicator.stringToProxy('accfac/accountfactory:tcp -h localhost -p 10000:udp -h localhost -p 10000')
     print(factory_prx)
     factory = bank.AccountFactoryPrx.checkedCast(factory_prx)

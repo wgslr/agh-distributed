@@ -34,6 +34,8 @@ public class BankServer {
 //            AccountI accountServant = new AccountI("somepesel", "w",
 //                    new MoneyAmount(3, Currency.PLN));
 
+            // TODO custom error for creating existing account
+
             AccountFactoryI factory = new AccountFactoryI();
             adapter.add(factory, new Identity("accountfactory", "accfac"));
 

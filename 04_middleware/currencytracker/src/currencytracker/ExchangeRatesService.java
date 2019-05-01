@@ -21,6 +21,8 @@ public class ExchangeRatesService extends ExchangeRatesGrpc.ExchangeRatesImplBas
             responseObserver.onNext(builder.build());
         }
 
+        // TODO asynchronously generate rate changes
+
         responseObserver.onCompleted();
     }
 }
