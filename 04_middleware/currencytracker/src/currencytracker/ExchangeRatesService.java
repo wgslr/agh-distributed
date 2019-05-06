@@ -12,7 +12,6 @@ public class ExchangeRatesService extends ExchangeRatesGrpc.ExchangeRatesImplBas
                           StreamObserver<Rate> responseObserver) {
         Currency base = request.getBase();
 
-        // TODO use shared object
         RatesProvider ratesProvider = RatesProvider.getInstance();
 
         System.out.println("Sending initial currency rates information");

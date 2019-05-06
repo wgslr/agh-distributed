@@ -1,7 +1,5 @@
 package currencytracker;
 
-import java.util.Random;
-
 public class RatesProviderTask implements Runnable {
     private static int CHANGE_PERIOD_SECONDS = 5;
 

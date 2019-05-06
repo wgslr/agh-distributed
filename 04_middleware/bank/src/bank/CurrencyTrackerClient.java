@@ -9,25 +9,31 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class CurrencyTrackerClient {
     private ManagedChannel channel;
     private ExchangeRatesGrpc.ExchangeRatesStub stub;
 
-    private HashMap<Currency, Double> ratesCache = new HashMap<>();
+    final private HashMap<Currency, Double> ratesCache = new HashMap<>();
+    final private List<Currency> trackedCurrencies;
 
-    public CurrencyTrackerClient(int port) {
-        this(ManagedChannelBuilder.forAddress("localhost", port).usePlaintext());
+    public CurrencyTrackerClient(int port, Collection<bank.Currency> trackedCurrencies) {
+        this(ManagedChannelBuilder.forAddress("localhost", port).usePlaintext(), trackedCurrencies);
     }
 
-    public CurrencyTrackerClient(String host, int port) {
-        this(ManagedChannelBuilder.forAddress(host, port).usePlaintext());
+    public CurrencyTrackerClient(String host, int port,
+                                 Collection<bank.Currency> trackedCurrencies) {
+        this(ManagedChannelBuilder.forAddress(host, port).usePlaintext(), trackedCurrencies);
     }
 
-    public CurrencyTrackerClient(ManagedChannelBuilder<?> channelBuilder) {
+    public CurrencyTrackerClient(ManagedChannelBuilder<?> channelBuilder,
+                                 Collection<bank.Currency> trackedCurrencies) {
+        this.trackedCurrencies = trackedCurrencies.stream()
+                .map(CurrencyTranslator::iceToGrpc)
+                .collect(Collectors.toList());
+
         channel = channelBuilder.build();
         System.out.println("Set up grpc channel");
         stub = ExchangeRatesGrpc.newStub(channel);
@@ -35,10 +41,9 @@ public class CurrencyTrackerClient {
     }
 
     public void trackChanges() {
-        // TODO customize currency selection
         SubscribeArgs args = SubscribeArgs.newBuilder()
                 .setBase(Currency.PLN)
-                .addAllTracked(Arrays.asList(Currency.GBP, Currency.HRK))
+                .addAllTracked(trackedCurrencies)
                 .build();
 
         StreamObserver<Rate> responseObserver = new StreamObserver<Rate>() {
