@@ -15,7 +15,7 @@ public class PremiumAccountI extends AccountI implements PremiumAccount {
 
     @Override
     public boolean isPremium() {
-        return false;
+        return true;
     }
 
     @Override
@@ -34,7 +34,7 @@ public class PremiumAccountI extends AccountI implements PremiumAccount {
         MoneyAmount convertedCost = new MoneyAmount(
                 (int) Math.round(
                         totalCost.minorUnitAmount * currencyTrackerClient.getRate(value.currency)
-                                .get()),
+                                .orElse(1.0)),
                 BankServer.BASE_CURRENCY
         );
 

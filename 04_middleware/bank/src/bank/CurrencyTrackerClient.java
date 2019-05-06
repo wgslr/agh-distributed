@@ -17,7 +17,7 @@ public class CurrencyTrackerClient {
     private ManagedChannel channel;
     private ExchangeRatesGrpc.ExchangeRatesStub stub;
 
-    private HashMap<Currency, Double> ratesCache;
+    private HashMap<Currency, Double> ratesCache = new HashMap<>();
 
     public CurrencyTrackerClient(int port) {
         this(ManagedChannelBuilder.forAddress("localhost", port).usePlaintext());
