@@ -7,6 +7,9 @@ public class CurrencyTracker {
 
         CurrencyTrackerServer server = new CurrencyTrackerServer(port);
         server.start();
+        new Thread(new RatesProviderTask()).run();
+
+
         server.blockUntilShutdown();
     }
 }
