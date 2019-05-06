@@ -5,6 +5,8 @@ module bank
 {
     enum Currency { PLN, EUR, USD, GBP, HRK }
 
+    exception AuthenticationException {}
+
     struct MoneyAmount {
         // i.e. for 100 PLN this field contains number of Grosz's (10000)
         // to avoid floating point precision issues
@@ -12,7 +14,11 @@ module bank
         Currency currency;
     }
 
-    exception AuthenticationException {}
+    struct LoanOffer {
+        MoneyAmount foreignCost;
+        MoneyAmount convertedCost;
+    };
+
 
     interface Account
     {
@@ -21,7 +27,7 @@ module bank
 
     interface PremiumAccount extends Account
     {
-        // TODO loan request
+        idempotent LoanOffer requestLoan(MoneyAmount value, int durationMonths) throws AuthenticationException;
     }
 
     struct AccountCreationResult {

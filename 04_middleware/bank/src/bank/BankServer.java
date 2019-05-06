@@ -6,6 +6,7 @@ import com.zeroc.Ice.ObjectAdapter;
 import com.zeroc.Ice.Util;
 
 public class BankServer {
+    public final static Currency BASE_CURRENCY = Currency.PLN;
     public void start(String[] args) {
         CurrencyTrackerClient currencyTrackerClient = new CurrencyTrackerClient(20000);
         currencyTrackerClient.trackChanges();
@@ -36,7 +37,7 @@ public class BankServer {
 
             // TODO custom error for creating existing account
 
-            AccountFactoryI factory = new AccountFactoryI();
+            AccountFactoryI factory = new AccountFactoryI(currencyTrackerClient);
             adapter.add(factory, new Identity("accountfactory", "accfac"));
 
 

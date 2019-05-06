@@ -10,10 +10,14 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Optional;
 
 public class CurrencyTrackerClient {
     private ManagedChannel channel;
     private ExchangeRatesGrpc.ExchangeRatesStub stub;
+
+    private HashMap<Currency, Double> ratesCache;
 
     public CurrencyTrackerClient(int port) {
         this(ManagedChannelBuilder.forAddress("localhost", port).usePlaintext());
@@ -42,6 +46,7 @@ public class CurrencyTrackerClient {
             public void onNext(Rate rate) {
                 System.out.println(String.format("Received rate update for %s: %f",
                         rate.getForeign(), rate.getForeignToBase()));
+                ratesCache.put(rate.getForeign(), rate.getForeignToBase());
             }
 
             @Override
@@ -56,6 +61,11 @@ public class CurrencyTrackerClient {
         };
 
         stub.subscribe(args, responseObserver);
+    }
+
+    public Optional<Double> getRate(bank.Currency currency) {
+        Currency grpcCurreny = CurrencyTranslator.iceToGrpc(currency);
+        return Optional.ofNullable(ratesCache.get(grpcCurreny));
     }
 
 }

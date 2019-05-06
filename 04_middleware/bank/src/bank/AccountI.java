@@ -30,7 +30,6 @@ public class AccountI implements Account {
     protected void checkAuthentication(Current current) throws AuthenticationException {
         String key = current.ctx.get("key");
         if (key == null || !key.equals(this.key)) {
-            // TODO  descriptive excepion class
             throw new AuthenticationException();
         }
 
