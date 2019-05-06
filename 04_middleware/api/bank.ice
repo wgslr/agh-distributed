@@ -9,6 +9,12 @@ module bank
 
     exception AccountExistsException {}
 
+    // Indicates that a bank does not handle
+    // operations in given currency
+    exception UnsupportedCurrencyException { 
+        Currency currency;
+    }
+
     struct MoneyAmount {
         // i.e. for 100 GBP this field contains number of groszs (10000)
         // to avoid floating point precision issues
@@ -29,7 +35,8 @@ module bank
 
     interface PremiumAccount extends Account
     {
-        idempotent LoanOffer requestLoan(MoneyAmount value, int durationMonths) throws AuthenticationException;
+        idempotent LoanOffer requestLoan(MoneyAmount value, int durationMonths)
+            throws AuthenticationException, UnsupportedCurrencyException;
     }
 
     struct AccountCreationResult {

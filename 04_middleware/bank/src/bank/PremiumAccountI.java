@@ -1,6 +1,7 @@
 package bank;
 
 import com.zeroc.Ice.Current;
+import sun.rmi.server.UnicastServerRef;
 
 public class PremiumAccountI extends AccountI implements PremiumAccount {
     private static double YEARLY_INTEREST_RATE = 0.1;
@@ -19,7 +20,7 @@ public class PremiumAccountI extends AccountI implements PremiumAccount {
     }
 
     @Override
-    public LoanOffer requestLoan(MoneyAmount value, int durationMonths, Current current) throws AuthenticationException {
+    public LoanOffer requestLoan(MoneyAmount value, int durationMonths, Current current) throws AuthenticationException, UnsupportedCurrencyException {
         checkAuthentication(current);
 
         System.out.println(String.format("Calculating loan in %s for %d months",
@@ -31,10 +32,11 @@ public class PremiumAccountI extends AccountI implements PremiumAccount {
                 value.currency
         );
 
+        double rate = currencyTrackerClient.getRate(value.currency)
+                .orElseThrow(() -> new UnsupportedCurrencyException(value.currency));
+        System.out.println(String.format("Rate for %s: %f", value.currency, rate));
         MoneyAmount convertedCost = new MoneyAmount(
-                (int) Math.round(
-                        totalCost.minorUnitAmount * currencyTrackerClient.getRate(value.currency)
-                                .orElse(1.0)),
+                (int) Math.round(totalCost.minorUnitAmount * rate),
                 BankServer.BASE_CURRENCY
         );
 
