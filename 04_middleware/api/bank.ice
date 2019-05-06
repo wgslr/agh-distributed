@@ -7,8 +7,10 @@ module bank
 
     exception AuthenticationException {}
 
+    exception AccountExistsException {}
+
     struct MoneyAmount {
-        // i.e. for 100 PLN this field contains number of Grosz's (10000)
+        // i.e. for 100 GBP this field contains number of groszs (10000)
         // to avoid floating point precision issues
         int minorUnitAmount;
         Currency currency;
@@ -37,8 +39,10 @@ module bank
     }
 
     interface AccountFactory {
-        AccountCreationResult createAccount(string firstName, string lastName,
-                string PESEL, MoneyAmount monthlyIncome);
+        AccountCreationResult createAccount(
+            string firstName, string lastName,
+            string PESEL, MoneyAmount monthlyIncome
+        ) throws AccountExistsException;
     }
 
 };

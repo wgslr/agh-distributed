@@ -16,7 +16,7 @@ public class AccountFactoryI implements AccountFactory {
 
     @Override
     public AccountCreationResult createAccount(String firstName, String lastName, String PESEL,
-                                               MoneyAmount monthlyIncome, Current current) {
+                                               MoneyAmount monthlyIncome, Current current) throws AccountExistsException {
         if (monthlyIncome.currency != BankServer.BASE_CURRENCY) {
             throw new IllegalArgumentException("Monthly income must be given in the base currency");
         }
@@ -34,7 +34,12 @@ public class AccountFactoryI implements AccountFactory {
 
         String category = newAccount.isPremium() ? "premium" : "standard";
 
-        ObjectPrx proxy = current.adapter.add(newAccount, new Identity(PESEL, category));
+        Identity id = new Identity(PESEL, category);
+        if (current.adapter.find(id) != null) {
+            throw new AccountExistsException();
+        }
+
+        ObjectPrx proxy = current.adapter.add(newAccount, id);
 
         return new AccountCreationResult(AccountPrx.uncheckedCast(proxy),
                 newAccount.isPremium(), newAccount.key);
