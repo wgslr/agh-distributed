@@ -80,8 +80,6 @@ def formatPrompt():
         return "{pesel}>".format(pesel=current_account.pesel)
 
 
-
-
 def handleRegister(communicator, args):
     global current_account
     ensureArgsLen(args, 4)
@@ -149,8 +147,6 @@ def handleLoan(communicator, args):
     ensureArgsLen(args, 3)
     [value, currency_str, duration] = args
 
-    print(current_account.is_premium)
-    print(current_account.key)
     if not current_account.is_premium:
         print("Standard account cannot request a loan!")
         return
@@ -160,13 +156,13 @@ def handleLoan(communicator, args):
     else:
         raise ValueError("Unknown currency!")
 
-    value_obj = bank.MoneyAmount(int(float(value) * 100), CURRENCY[currency_str.upper()])
+    value_obj = bank.MoneyAmount(
+        int(float(value) * 100), CURRENCY[currency_str.upper()])
     result = current_account.requestLoan(value_obj, int(duration))
 
     print("Loan cost: {:.2f} {} ({:.2f} {})".format(
-        result.foreignCost.minorUnitAmount/ 100, result.foreignCost.currency,
-        result.convertedCost.minorUnitAmount/ 100, result.convertedCost.currency))
-
+        result.foreignCost.minorUnitAmount / 100, result.foreignCost.currency,
+        result.convertedCost.minorUnitAmount / 100, result.convertedCost.currency))
 
 
 def handleExit(communicator, _args):
@@ -203,8 +199,10 @@ def repl_loop(communicator):
             print("This bank does not offer currency '{}'".format(e.currency))
         except Exception as error:
             print("Error: ", error)
+
     def getBalance(self):
         return self.proxy.getBalance({'key': self.key})
+
 
 if __name__ == '__main__':
     try:
