@@ -35,49 +35,24 @@ public class BankServer {
         Communicator communicator = null;
 
         try {
-            // 1. Inicjalizacja ICE - utworzenie communicatora
             communicator = Util.initialize(args);
-
-            // 2. Konfiguracja adaptera
-            // METODA 1 (polecana produkcyjnie): Konfiguracja adaptera Adapter1 jest w pliku
-            // konfiguracyjnym podanym jako parametr uruchomienia serwera
-            //Ice.ObjectAdapter adapter = communicator.createObjectAdapter("Adapter1");
-
-            // METODA 2 (niepolecana, dopuszczalna testowo): Konfiguracja adaptera Adapter1 jest
-            // w kodzie ródłowym
             ObjectAdapter adapter = communicator.createObjectAdapterWithEndpoints("Adapter1",
                     String.format("tcp -h localhost -p %d:udp -h localhost -p %d", port, port));
-
-//            // 3. Stworzenie serwanta/serwantów
-//            AccountI accountServant = new AccountI("somepesel", "w",
-//                    new MoneyAmount(3, Currency.PLN));
 
             // TODO custom error for creating existing account
 
             AccountFactoryI factory = new AccountFactoryI(currencyTrackerClient);
             adapter.add(factory, new Identity("accountfactory", "accfac"));
 
-
-//            locator.createAccount("jan", "kowalski", "somepesel", new MoneyAmount(3000,
-//                    Currency.PLN));
-            // 4. Dodanie wpisów do tablicy ASM
-//            adapter.add(accountServant, new Identity("somepesel", "standard"));
-
-
-            // 5. Aktywacja adaptera i przejcie w pętlę przetwarzania żšdań
             adapter.activate();
-
             System.out.println("Entering event processing loop...");
-
             communicator.waitForShutdown();
-
         } catch (Exception e) {
             System.err.println(e);
             status = 1;
         }
+
         if (communicator != null) {
-            // Clean up
-            //
             try {
                 communicator.destroy();
             } catch (Exception e) {
