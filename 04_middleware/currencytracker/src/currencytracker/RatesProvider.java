@@ -70,7 +70,7 @@ public class RatesProvider {
         final Double change = 0.75 + random.nextDouble() * 0.5;
         final Double newRate = previousRate * change;
 
-        System.out.println(String.format("Changing rate of %s by %f%%. New rate: %f",
+        System.out.println(String.format("Changing rate of %s by %.2f%%. New rate: %f",
                 toChange, change * 100, newRate));
 
         ratesDb.put(toChange, newRate);

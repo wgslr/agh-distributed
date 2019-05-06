@@ -3,54 +3,145 @@
 import sys
 import os
 import Ice
+from typing import Optional
 
 Ice.loadSlice('../api/bank.ice')
 import bank
 
+
+class Account:
+    def __init__(self, proxy, pesel, key, is_premium):
+        self.proxy = proxy
+        self.pesel = pesel
+        self.key = key
+        self.is_premium = is_premium
+
+    def getBalance(self):
+        return self.proxy.getBalance({'key': self.key})
+
+
 DEFAULT_PORT = 10000
+BASE_CURRENCY = bank.Currency.PLN
 
 port = DEFAULT_PORT
-account = None
+current_account: Optional[Account] = None
+
 
 def printHelp():
     print("Available commands:")
     print("help")
     print("register <first name> <last name> <pesel> <monthly income>")
-    print("login <pesel> <key>")
+    print("login <category> <pesel> <key>")
     print("balance")
     print("loan <value> <currency> <period in months>")
     print("exit")
 
 
-def getProxy(communicator, name, category):
+def getProxy(communicator, category, name):
     return communicator.stringToProxy('{}/{}:tcp -h localhost -p {port}:udp -h localhost -p {port}'.format(
                                       category, name, port=port))
 
-def handleRegister(args):
+
+def getAccount(communicator, category, pesel):
+    proxy = getProxy(communicator, category, pesel)
+    premium = bank.PremiumAccountPrx.checkedCast(proxy)
+    if premium:
+        return premium
+    else:
+        return bank.AccountPrx.checkedCast(proxy)
+
+
+def ensureArgsLen(args, required):
+    if len(args) != required:
+        raise ValueError(
+            "Expected {} arguments, {} given!".format(required, len(args)))
+
+
+def formatBalance(balance):
+    return "{:.2f} {}".format(balance.minorUnitAmount / 100, balance.currency)
+
+
+def formatPrompt():
+    global current_account
+    if current_account is None:
+        return "not logged in>"
+    else:
+        return "{pesel}>".format(pesel=current_account.pesel)
+
+
+def handleRegister(communicator, args):
+    global current_account
+    ensureArgsLen(args, 4)
+
+    [fname, lname, pesel, income_str] = args
+    income = float(income_str)
+
+    factory_prx = getProxy(communicator, "accountfactory", "accountfactory")
+    factory = bank.AccountFactoryPrx.checkedCast(factory_prx)
+
+    income_obj = bank.MoneyAmount(income * 100, BASE_CURRENCY)
+    try:
+        result = factory.createAccount(fname, lname, pesel, income_obj)
+        current_account = Account(
+            result.account, pesel, result.key, result.isPremium)
+
+        premium_str = "premium" if result.isPremium else "standard"
+        print("Registered a {} account. Access key: {}".format(premium_str, result.key))
+    except bank.AccountExistsException:
+        print("Account using this PESEL is already registered!")
+
+
+def handleLogin(communicator, args):
+    try:
+        global current_account
+        ensureArgsLen(args, 3)
+        if args[0].lower() == "standard":
+            category = "standard"
+        elif args[0].lower() == "premium":
+            category = "premium"
+        else:
+            raise ValueError("Category must be 'standard' or 'premium'")
+
+        [pesel, key] = args[1:]
+
+        account = getAccount(communicator, category, pesel)
+        balance = account.getBalance({'key': key})
+
+        print("Logged in. Current balance: " + formatBalance(balance))
+        current_account = Account(
+            account, pesel, key, category.upper() == 'premium')
+    except Ice.ObjectNotExistException:
+        print("Given account does not exist!")
+
+
+def handleBalance(communicator, args):
+    balance = current_account.getBalance()
+    print("Current balance: " + formatBalance(balance))
+
+
+def handleLoan(communicator, args):
     pass
 
-def handleLogin(args):
-    pass
 
-def handleLoan(args):
-    pass
-
-def handleExit(_args):
+def handleExit(communicator, _args):
     sys.exit()
+
 
 actionToHandler = {
     'register': handleRegister,
     'login': handleLogin,
     'loan': handleLoan,
+    'balance': handleBalance,
     'help': lambda _args: printHelp(),
     'exit': handleExit,
 }
 
 
 def repl_loop(communicator):
+    printHelp()
     while True:
-        print("> ", end='')
-        line = input()
+        print(formatPrompt(), end=' ')
+        line = input().strip()
         words = line.split()
         if not words or words[0] not in actionToHandler:
             print("Unknown command!")
@@ -58,11 +149,15 @@ def repl_loop(communicator):
             continue
 
         command, *args = words
-        actionToHandler[command](args)
+        try:
+            actionToHandler[command](communicator, args)
+        except bank.AuthenticationException:
+            print("Bad access key!")
+        except Exception as error:
+            print("Error: ", error)
 
 
 if __name__ == '__main__':
-    print("main")
     try:
         port = int(sys.argv[1])
     except Exception as e:
@@ -74,7 +169,8 @@ if __name__ == '__main__':
         # TODO make the client interactive  to switch between accounts
         # TODO read server port from commandline
 
-        factory_prx = getProxy(communicator, "accountfactory", "accountfactory")
+        factory_prx = getProxy(
+            communicator, "accountfactory", "accountfactory")
         print(factory_prx)
         factory = bank.AccountFactoryPrx.checkedCast(factory_prx)
         print(factory)
@@ -85,16 +181,17 @@ if __name__ == '__main__':
 
         if result.isPremium:
             print("Casting to premium account")
-            account = bank.PremiumAccountPrx.checkedCast(result.account)
+            current_account = bank.PremiumAccountPrx.checkedCast(
+                result.account)
 
             print("requesting loan")
 
             loanValue = bank.MoneyAmount(3000, bank.Currency.GBP)
-            offer = account.requestLoan(loanValue, 15, {'key': key})
+            offer = current_account.requestLoan(loanValue, 15, {'key': key})
             print(offer)
         else:
             print("standard account")
-            account = result.account
+            current_account = result.account
 
         result2 = factory.createAccount("wewe", "g", "12345", income)
         print(result2)
