@@ -28,9 +28,11 @@ public class ExchangeRatesService extends ExchangeRatesGrpc.ExchangeRatesImplBas
 
 
         ratesProvider.addChangeListener(change -> {
-            if (request.getTrackedList().contains(change.currency)) {
-                System.out.println("Sending update for currency " + change.currency);
+            if (!request.getTrackedList().contains(change.currency)) {
+                return;
             }
+
+            System.out.println("Sending update for currency " + change.currency);
             Rate.Builder builder = Rate.newBuilder();
             builder.setBase(base)
                     .setForeign(change.currency)
