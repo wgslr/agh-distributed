@@ -1,6 +1,10 @@
 package currencytracker;
 
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
+
+import java.util.concurrent.CancellationException;
 
 public class ExchangeRatesService extends ExchangeRatesGrpc.ExchangeRatesImplBase {
     @Override
@@ -22,6 +26,7 @@ public class ExchangeRatesService extends ExchangeRatesGrpc.ExchangeRatesImplBas
             responseObserver.onNext(builder.build());
         }
 
+
         ratesProvider.addChangeListener(change -> {
             if (request.getTrackedList().contains(change.currency)) {
                 System.out.println("Sending update for currency " + change.currency);
@@ -30,7 +35,14 @@ public class ExchangeRatesService extends ExchangeRatesGrpc.ExchangeRatesImplBas
             builder.setBase(base)
                     .setForeign(change.currency)
                     .setForeignToBase(change.newRate);
-            responseObserver.onNext(builder.build());
+
+            try {
+                responseObserver.onNext(builder.build());
+            } catch (StatusRuntimeException exception) {
+                if (!exception.getStatus().getCode().equals(Status.Code.CANCELLED)) {
+                    throw exception;
+                }
+            }
         });
 
 //        responseObserver.onCompleted();

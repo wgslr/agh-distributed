@@ -36,7 +36,7 @@ public class RatesProvider {
     }
 
     private void initializeRates() {
-        ratesDb.put(Currency.PLN, 1.0);
+        ratesDb.put(REFERENCE_CURRENCY, 1.0);
         ratesDb.put(Currency.EUR, 4.0);
         ratesDb.put(Currency.USD, 3.0);
         ratesDb.put(Currency.GBP, 5.0);
@@ -82,7 +82,7 @@ public class RatesProvider {
         Currency randomCurrency;
         do {
             randomCurrency = array[random.nextInt(array.length)];
-        } while (randomCurrency == Currency.UNRECOGNIZED);
+        } while (randomCurrency == Currency.UNRECOGNIZED || randomCurrency == REFERENCE_CURRENCY);
         return randomCurrency;
     }
 }
