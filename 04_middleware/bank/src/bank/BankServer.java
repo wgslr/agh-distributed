@@ -110,5 +110,6 @@ public class BankServer {
 
     private static void displayHelp() {
         System.out.println("Usage: <port number> <tracked currency 1> <tracked currency 2> ...");
+        System.out.println("Possible currencies: " + Arrays.toString(Currency.values()));
     }
 }

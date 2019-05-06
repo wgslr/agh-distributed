@@ -17,7 +17,7 @@ public class CurrencyTrackerClient {
     private ExchangeRatesGrpc.ExchangeRatesStub stub;
 
     final private HashMap<Currency, Double> ratesCache = new HashMap<>();
-    final private List<Currency> trackedCurrencies;
+    final private Set<Currency> trackedCurrencies;
 
     public CurrencyTrackerClient(int port, Collection<bank.Currency> trackedCurrencies) {
         this(ManagedChannelBuilder.forAddress("localhost", port).usePlaintext(), trackedCurrencies);
@@ -32,7 +32,7 @@ public class CurrencyTrackerClient {
                                  Collection<bank.Currency> trackedCurrencies) {
         this.trackedCurrencies = trackedCurrencies.stream()
                 .map(CurrencyTranslator::iceToGrpc)
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
 
         channel = channelBuilder.build();
         System.out.println("Set up grpc channel");
