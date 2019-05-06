@@ -8,19 +8,57 @@ Ice.loadSlice('../api/bank.ice')
 import bank
 
 DEFAULT_PORT = 10000
-port = DEFAULT_PORT
 
+port = DEFAULT_PORT
+account = None
 
 def printHelp():
     print("Available commands:")
+    print("help")
     print("register <first name> <last name> <pesel> <monthly income>")
     print("login <pesel> <key>")
+    print("balance")
     print("loan <value> <currency> <period in months>")
+    print("exit")
 
 
 def getProxy(communicator, name, category):
     return communicator.stringToProxy('{}/{}:tcp -h localhost -p {port}:udp -h localhost -p {port}'.format(
                                       category, name, port=port))
+
+def handleRegister(args):
+    pass
+
+def handleLogin(args):
+    pass
+
+def handleLoan(args):
+    pass
+
+def handleExit(_args):
+    sys.exit()
+
+actionToHandler = {
+    'register': handleRegister,
+    'login': handleLogin,
+    'loan': handleLoan,
+    'help': lambda _args: printHelp(),
+    'exit': handleExit,
+}
+
+
+def repl_loop(communicator):
+    while True:
+        print("> ", end='')
+        line = input()
+        words = line.split()
+        if not words or words[0] not in actionToHandler:
+            print("Unknown command!")
+            printHelp()
+            continue
+
+        command, *args = words
+        actionToHandler[command](args)
 
 
 if __name__ == '__main__':
@@ -30,8 +68,9 @@ if __name__ == '__main__':
     except Exception as e:
         print("Defaulting to port number {}".format(DEFAULT_PORT))
 
-
     with Ice.initialize(sys.argv) as communicator:
+        repl_loop(communicator)
+
         # TODO make the client interactive  to switch between accounts
         # TODO read server port from commandline
 

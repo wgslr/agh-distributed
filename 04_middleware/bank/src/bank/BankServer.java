@@ -39,10 +39,8 @@ public class BankServer {
             ObjectAdapter adapter = communicator.createObjectAdapterWithEndpoints("Adapter1",
                     String.format("tcp -h localhost -p %d:udp -h localhost -p %d", port, port));
 
-            // TODO custom error for creating existing account
-
             AccountFactoryI factory = new AccountFactoryI(currencyTrackerClient);
-            adapter.add(factory, new Identity("accountfactory", "accfac"));
+            adapter.add(factory, new Identity("accountfactory", "accountfactory"));
 
             adapter.activate();
             System.out.println("Entering event processing loop...");
