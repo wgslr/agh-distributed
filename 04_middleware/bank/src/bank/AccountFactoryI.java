@@ -41,6 +41,9 @@ public class AccountFactoryI implements AccountFactory {
 
         ObjectPrx proxy = current.adapter.add(newAccount, id);
 
+        System.out.println(String.format("Registered account for %s with pesel %s; balance = %d",
+                name, PESEL, balance.minorUnitAmount / 100));
+
         return new AccountCreationResult(AccountPrx.uncheckedCast(proxy),
                 newAccount.isPremium(), newAccount.key);
     }

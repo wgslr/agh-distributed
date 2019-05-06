@@ -27,8 +27,9 @@ public class PremiumAccountI extends AccountI implements PremiumAccount {
                 value.currency, durationMonths));
 
         double interest = value.minorUnitAmount * durationMonths / 12.0 * YEARLY_INTEREST_RATE;
+        System.out.println(String.format("Calculated interest: %.2f %s", interest/100, value.currency));
         MoneyAmount totalCost = new MoneyAmount(
-                (int) Math.round(value.minorUnitAmount * (1 + interest)),
+                (int) Math.round(value.minorUnitAmount + interest),
                 value.currency
         );
 
