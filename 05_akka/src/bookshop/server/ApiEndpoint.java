@@ -2,6 +2,8 @@ package bookshop.server;
 
 import akka.actor.AbstractActor;
 import akka.actor.Actor;
+import akka.actor.ActorRef;
+import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import bookshop.api.SearchRequest;
@@ -20,7 +22,8 @@ public class ApiEndpoint extends AbstractActor {
                 })
                 .match(SearchRequest.class, (SearchRequest sr) -> {
                     log.info(String.format("Received search request for title %s", sr.title));
-                    getSender().tell(new SearchResult(sr.title, 3.45), getSelf());
+                    ActorRef worker = getContext().actorOf(Props.create(SearchHandler.class));
+                    worker.tell(sr, self());
                 })
                 .matchAny(o -> log.info("received unknown message"))
                 .build();

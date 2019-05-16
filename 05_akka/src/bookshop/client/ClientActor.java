@@ -23,8 +23,10 @@ public class ClientActor extends AbstractActor {
     @Override
     public AbstractActor.Receive createReceive() {
         return receiveBuilder()
-                .match(Request.class, r ->
-                        getContext().actorSelection(apiEndpointPath).tell(r, getSelf()))
+                .match(Request.class, r -> {
+                    r.replyTo = getSelf();
+                    getContext().actorSelection(apiEndpointPath).tell(r, getSelf());
+                })
                 .match(SearchResult.class, sr ->
                         System.out.println(String.format("Price of '%s' is %.2f",
                                 sr.title, sr.price)))
