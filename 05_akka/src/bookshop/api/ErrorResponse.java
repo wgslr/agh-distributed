@@ -1,6 +1,8 @@
 package bookshop.api;
 
-public class ErrorResponse {
+import java.io.Serializable;
+
+public class ErrorResponse implements Serializable {
 
     public enum ErrorType {
         NOT_FOUND;

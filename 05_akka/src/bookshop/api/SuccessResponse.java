@@ -1,4 +1,6 @@
 package bookshop.api;
 
-public abstract class SuccessResponse {
+import java.io.Serializable;
+
+public abstract class SuccessResponse implements Serializable {
 }

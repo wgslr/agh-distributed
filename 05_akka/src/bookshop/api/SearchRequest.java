@@ -1,8 +1,6 @@
 package bookshop.api;
 
-import java.io.Serializable;
-
-public class SearchRequest implements Serializable {
+public class SearchRequest extends Request {
     public final String title;
 
     public SearchRequest(String title) {
