@@ -17,7 +17,6 @@ public class ServerApp {
         final ActorSystem system = ActorSystem.create("bookshopserver", config);
         final ActorRef apiServer = system.actorOf(Props.create(ApiEndpoint.class), "api");
 
-
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         while (true) {
             String line = br.readLine();
