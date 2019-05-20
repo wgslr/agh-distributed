@@ -29,6 +29,7 @@ public class BookDbReader extends AbstractActor {
                 .match(SearchRequest.class, req -> {
                     Optional<ShelfItem> result = lookup(req.title);
                     if (result.isPresent()) {
+                        log.info("Found " + req.title);
                         SearchResult sr = new SearchResult(req.title, result.get().price);
                         getSender().tell(sr, getSelf());
                     } else {
@@ -42,6 +43,7 @@ public class BookDbReader extends AbstractActor {
     }
 
     private Optional<ShelfItem> lookup(String title) throws IOException {
+        log.info(String.format("Starting db search for %s", title));
         try (Stream<String> stream = Files.lines(Paths.get(dbPath))) {
             return stream
                     .peek(x -> {
