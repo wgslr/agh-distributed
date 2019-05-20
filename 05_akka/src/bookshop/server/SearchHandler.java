@@ -48,7 +48,8 @@ public class SearchHandler extends AbstractActor {
     }
 
     @Override
-    public void preStart() throws Exception {
+    public void preStart() {
+        log.info("Starting");
         dbActors.addAll(Arrays.asList(
                 context().actorOf(Props.create(BookDbReader.class, dbPath1), "dbReader1"),
                 context().actorOf(Props.create(BookDbReader.class, dbPath2), "dbReader2")
@@ -58,8 +59,8 @@ public class SearchHandler extends AbstractActor {
 
     private static SupervisorStrategy strategy
             = new OneForOneStrategy(10, Duration.create("1 minute"), DeciderBuilder.
-                    matchAny(o -> stop()).
-                    build());
+            matchAny(o -> stop()).
+            build());
 
     @Override
     public SupervisorStrategy supervisorStrategy() {
@@ -90,6 +91,7 @@ public class SearchHandler extends AbstractActor {
             } else {
                 replyTo.tell(new ErrorResponse(ErrorResponse.ErrorType.DB_UNAVAILABLE), getSelf());
             }
+            getContext().stop(getSelf());
         }
     }
 }
