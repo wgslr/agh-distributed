@@ -5,7 +5,8 @@ import java.io.Serializable;
 public class ErrorResponse implements Serializable {
 
     public enum ErrorType {
-        NOT_FOUND;
+        NOT_FOUND,
+        DB_UNAVAILABLE
     }
 
     public final ErrorType errorType;
