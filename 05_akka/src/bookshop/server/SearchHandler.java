@@ -22,7 +22,7 @@ public class SearchHandler extends AbstractActor {
     private void handleSearch(SearchRequest request) {
         SearchResult result = new SearchResult(request.title, 3.33);
         request.replyTo.tell(result, self());
-        // this is an one-off worker
+        // this is a one-off worker
         getContext().stop(getSelf());
     }
 }
