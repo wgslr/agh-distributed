@@ -44,6 +44,13 @@ public class BookDbReader extends AbstractActor {
     private Optional<ShelfItem> lookup(String title) throws IOException {
         try (Stream<String> stream = Files.lines(Paths.get(dbPath))) {
             return stream
+                    .peek(x -> {
+                        try {
+                            // reading is supposed to be slow
+                            Thread.sleep(100);
+                        } catch (InterruptedException ignored) {
+                        }
+                    })
                     .map(this::parseLine)
                     .filter(si -> si.title.equals(title))
                     .findFirst();
