@@ -1,19 +1,16 @@
 package bookshop.server;
 
 import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.stream.ActorMaterializer;
 import akka.stream.Materializer;
 import akka.stream.ThrottleMode;
-import akka.stream.javadsl.FileIO;
 import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
 import bookshop.api.ErrorResponse;
 import bookshop.api.StreamRequest;
-import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.io.IOException;

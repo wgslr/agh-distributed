@@ -1,7 +1,6 @@
 package bookshop.client;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSelection;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import bookshop.api.OrderRequest;
@@ -13,7 +12,6 @@ import com.typesafe.config.ConfigFactory;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
-import java.util.function.Supplier;
 
 public class ClientApp {
     private static ActorRef clientActor;

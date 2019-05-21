@@ -4,13 +4,10 @@ import akka.actor.*;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.pf.DeciderBuilder;
-import bookshop.api.*;
+import bookshop.api.ErrorResponse;
+import bookshop.api.OrderRequest;
+import bookshop.api.OrderResult;
 import scala.concurrent.duration.Duration;
-
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
 
 import static akka.actor.SupervisorStrategy.stop;
 

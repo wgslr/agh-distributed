@@ -1,7 +1,6 @@
 package bookshop.client;
 
 import akka.actor.AbstractActor;
-import akka.actor.ActorSelection;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import bookshop.api.ErrorResponse;

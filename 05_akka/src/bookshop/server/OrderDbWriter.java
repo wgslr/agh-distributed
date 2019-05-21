@@ -3,16 +3,12 @@ package bookshop.server;
 import akka.actor.AbstractActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import bookshop.api.*;
+import bookshop.api.OrderRequest;
+import bookshop.api.OrderResult;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Optional;
-import java.util.stream.Stream;
 
 public class OrderDbWriter extends AbstractActor {
 
