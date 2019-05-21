@@ -58,7 +58,7 @@ public class SearchHandler extends AbstractActor {
     }
 
     private static SupervisorStrategy strategy
-            = new OneForOneStrategy(10, Duration.create("1 minute"), DeciderBuilder.
+            = new OneForOneStrategy(10, Duration.Inf(), DeciderBuilder.
             matchAny(o -> stop()).
             build());
 

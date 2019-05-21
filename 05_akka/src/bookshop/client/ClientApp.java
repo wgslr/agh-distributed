@@ -4,6 +4,7 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
+import bookshop.api.OrderRequest;
 import bookshop.api.SearchRequest;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -28,6 +29,7 @@ public class ClientApp {
 
         System.out.println("Client ActorSystem set up");
         System.out.println("Starting REPL. Available commands:\n" +
+                "o <some title> - order a book\n" +
                 "s <some title> - lookup a book");
 
 
@@ -49,8 +51,12 @@ public class ClientApp {
         final String[] split = line.split("\\s", 2);
         switch (split[0]) {
             case "s":
-                SearchRequest request = new SearchRequest(split[1]);
-                clientActor.tell(request, null);
+                SearchRequest searchReq = new SearchRequest(split[1]);
+                clientActor.tell(searchReq, null);
+                break;
+            case "o":
+                OrderRequest orderReq = new OrderRequest(split[1]);
+                clientActor.tell(orderReq, null);
                 break;
             default:
                 System.out.println(String.format("Unknown command '%s'", split[0]));

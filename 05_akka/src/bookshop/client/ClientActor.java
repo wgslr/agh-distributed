@@ -5,6 +5,7 @@ import akka.actor.ActorSelection;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import bookshop.api.ErrorResponse;
+import bookshop.api.OrderResult;
 import bookshop.api.Request;
 import bookshop.api.SearchResult;
 
@@ -29,11 +30,14 @@ public class ClientActor extends AbstractActor {
                     getContext().actorSelection(apiEndpointPath).tell(r, getSelf());
                 })
                 .match(SearchResult.class, sr ->
-                        System.out.println(String.format("Price of '%s' is %.2f",
-                                sr.title, sr.price)))
+                        System.out.println(String.format(
+                                "Price of '%s' is %.2f", sr.title, sr.price)))
+                .match(OrderResult.class, sr ->
+                        System.out.println(String.format(
+                                "Success ordering '%s'", sr.title)))
                 .match(ErrorResponse.class, err ->
-                        System.out.println(
-                                String.format("Request failed with error %s", err.errorType)))
+                        System.out.println(String.format(
+                                "Request failed with error %s", err.errorType)))
                 .matchAny(o -> log.info("received unknown message"))
                 .build();
     }
