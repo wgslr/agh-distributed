@@ -6,7 +6,8 @@ public class ErrorResponse implements Serializable {
 
     public enum ErrorType {
         NOT_FOUND,
-        DB_UNAVAILABLE
+        DB_UNAVAILABLE,
+        INTERNAL_SERVER_ERROR,
     }
 
     public final ErrorType errorType;

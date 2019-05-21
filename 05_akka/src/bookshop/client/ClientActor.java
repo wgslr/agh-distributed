@@ -29,6 +29,7 @@ public class ClientActor extends AbstractActor {
                     r.replyTo = getSelf();
                     getContext().actorSelection(apiEndpointPath).tell(r, getSelf());
                 })
+                .match(String.class, System.out::println)
                 .match(SearchResult.class, sr ->
                         System.out.println(String.format(
                                 "Price of '%s' is %.2f", sr.title, sr.price)))
@@ -38,7 +39,7 @@ public class ClientActor extends AbstractActor {
                 .match(ErrorResponse.class, err ->
                         System.out.println(String.format(
                                 "Request failed with error %s", err.errorType)))
-                .matchAny(o -> log.info("received unknown message"))
+                .matchAny(o -> log.info("received unknown message: " + o.toString()))
                 .build();
     }
 
