@@ -1,10 +1,11 @@
+import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooKeeper;
 
 import java.io.IOException;
 import java.util.Arrays;
 
 public class ZooApp {
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException, InterruptedException, KeeperException {
         System.out.println("Args: " + Arrays.toString(args));
 
         String addr;
