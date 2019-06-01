@@ -4,13 +4,13 @@ import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.Stat;
 
 import java.io.IOException;
+import java.util.List;
 
 public class ApplicationSupervisor {
     private static final int SESSION_TIMEOUT = 3000;
     private static final String MAIN_NODE = "/z";
 
     private ZooKeeper zooKeeper;
-    private ZooWatcher watcher;
 
     private String[] toSpawn;
     private Process spawned = null;
@@ -21,23 +21,11 @@ public class ApplicationSupervisor {
             KeeperException,
             InterruptedException {
         this.toSpawn = toSpawn;
-        watcher = new ZooWatcher();
-        watcher.setOnChildrenChanged(path -> {
-            try {
-                onChildrenChanged(path);
-            } catch (KeeperException | InterruptedException ignore) {
-            }
+        zooKeeper = new ZooKeeper(address, SESSION_TIMEOUT, (ignore) -> {
         });
-        zooKeeper = new ZooKeeper(address, SESSION_TIMEOUT, watcher);
 
-//
-//
-//        // set up watches
-//        System.out.println("/ze");
-//        printSubtree("/ze");
-        zooKeeper.getChildren("/", watcher);
-        zooKeeper.exists("/z", this::onExistsChanged);
-        zooKeeper.getChildren("/z", watcher, (x, y, z, a, b) -> {}, null);
+        setupExistsWatch();
+        setupChildrenWatch();
     }
 
     // TODO remember to print tree root beforehand
@@ -50,15 +38,26 @@ public class ApplicationSupervisor {
     }
 
 
-    private void onChildrenChanged(final String path) throws KeeperException, InterruptedException {
-        // restore watch, asynchronously
-        zooKeeper.getChildren(path, watcher, (x, y, z, a, b) -> {
-        }, null);
-        if (path.equals(MAIN_NODE)) {
-            printChildCount(MAIN_NODE);
-        } else if (path.equals("/")) {
-            refreshState();
+    private void onChildrenChanged(final WatchedEvent event) {
+        System.out.println("Received " + event);
+        final String path = event.getPath();
+        assert path.equals("/z");
+        try {
+            // restore watch
+            final List<String> children = zooKeeper.getChildren(path, this::onChildrenChanged);
+            printChildCount(children.size(), path);
+        } catch (KeeperException | InterruptedException e) {
+            e.printStackTrace();
         }
+    }
+
+
+    private void printChildCount(final int count, final String path) {
+        if (count > previousChildCount) {
+            // the children count is to be displayed only when adding a child
+            System.out.println(String.format("There are %d children of '%s'", count, path));
+        }
+        previousChildCount = count;
     }
 
 
@@ -69,8 +68,8 @@ public class ApplicationSupervisor {
             if (result == null) {
                 ensureStopped();
             } else {
+                setupChildrenWatch();
                 ensureStarted();
-                zooKeeper.getChildren("/z", watcher, (x, y, z, a, b) -> {}, null);
             }
         } catch (KeeperException | InterruptedException e) {
             e.printStackTrace();
@@ -94,20 +93,22 @@ public class ApplicationSupervisor {
         }
     }
 
-
-    private void refreshState() {
-        System.out.println("Something changed in namespace root");
-//        if zooKeeper.get
+    private void setupExistsWatch() {
+        // asynchronously not to hinder the calling thread
+        zooKeeper.exists("/z", this::onExistsChanged,
+                this::nullStatCallback, null);
     }
 
+    private void setupChildrenWatch() {
+        // @fixme this callback also happens when node is deleted
+        zooKeeper.getChildren("/z", this::onChildrenChanged,
+                this::nullChildrenCallback, null);
+    }
 
-    private void printChildCount(final String path) throws KeeperException, InterruptedException {
-        final int count = zooKeeper.getChildren(path, false).size();
-        if (count > previousChildCount) {
-            // the children count is to be displayed only when adding a child
-            System.out.println(String.format("There are %d children of '%s'", count, path));
-        }
-        previousChildCount = count;
+    private void nullChildrenCallback(int rc, String path, Object ctx, List<String> children) {
+    }
+
+    private void nullStatCallback(int rc, String path, Object ctx, Stat stat) {
     }
 
 
