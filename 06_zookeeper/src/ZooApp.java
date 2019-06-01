@@ -9,12 +9,13 @@ import java.util.Arrays;
 public class ZooApp {
     public static void main(String[] args) throws IOException, InterruptedException,
             KeeperException {
-        System.out.println("Args: " + Arrays.toString(args));
 
         String addr;
-        String[] toSpawn = new String[]{"gnome-calculator"};
-        if (args.length < 1) {
+        String[] toSpawn;
+        if (args.length < 2) {
+            System.out.println("Expected arguments: <zookeeperhost> <apptolaunch>...");
             addr = "localhost:2181";
+            toSpawn = new String[]{"gnome-calculator"};
         } else {
             addr = args[0];
             toSpawn = Arrays.copyOfRange(args, 1, args.length);
