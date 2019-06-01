@@ -1,7 +1,9 @@
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooKeeper;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Arrays;
 
 public class ZooApp {
@@ -18,10 +20,18 @@ public class ZooApp {
             toSpawn = Arrays.copyOfRange(args, 1, args.length);
         }
 
-
         ApplicationSupervisor as = new ApplicationSupervisor(addr, toSpawn);
 
-        Thread.sleep(60 * 1000);
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        while (true) {
+            String line = br.readLine();
+            if (line.charAt(0) == 'p') {
+                System.out.println("/z");
+                as.printSubtree("/z");
+            } else if (line.charAt(0) == 'q') {
+                break;
+            }
+        }
     }
 
 }
