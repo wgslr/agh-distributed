@@ -26,28 +26,27 @@ public class ApplicationSupervisor implements Watcher {
         });
 
         try {
-            System.out.println("Setting up children watch");
-            List<String> children = zooKeeper.getChildren(MAIN_NODE, this);
-            System.out.println("Children: " + children.toString());
+            zooKeeper.getChildren(MAIN_NODE, this);
+            System.out.println(String.format("Node %s exists, set up getChildren watch", MAIN_NODE));
         } catch (KeeperException e) {
-            System.out.println("Falling back to exists");
             setupExistsWatch();
+            System.out.println("Set up watch waiting for /z creation");
         }
     }
 
-    // TODO remember to print tree root beforehand
+
     public void printSubtree(final String path) throws KeeperException, InterruptedException {
-        for (String child : zooKeeper.getChildren(path, false)) {
-            final String childPath = path + "/" + child;
-            System.out.println(childPath);
-            printSubtree(childPath);
+        if (zooKeeper.exists(path, false) != null) {
+            System.out.println(path);
+            for (String child : zooKeeper.getChildren(path, false)) {
+                printSubtree(path + "/" + child);
+            }
         }
     }
 
 
     @Override
     public void process(final WatchedEvent watchedEvent) {
-        System.out.println("Got event: " + watchedEvent);
         assert watchedEvent.getPath().equals("/z");
         switch (watchedEvent.getType()) {
             case NodeDeleted:
@@ -60,12 +59,12 @@ public class ApplicationSupervisor implements Watcher {
         }
     }
 
+
     private void onChildrenChanged(final WatchedEvent event) {
-        System.out.println("Received " + event);
         final String path = event.getPath();
         try {
             // restore watch and get children count
-            final List<String> children = zooKeeper.getChildren(path, this::onChildrenChanged);
+            final List<String> children = zooKeeper.getChildren(path, this);
             printChildCount(children.size(), path);
         } catch (KeeperException | InterruptedException e) {
         }
@@ -82,9 +81,8 @@ public class ApplicationSupervisor implements Watcher {
 
 
     private void onExistsChanged(final WatchedEvent event) {
-        System.out.println("onExistsChanged for path " + event.getPath());
         try {
-            final Stat result = zooKeeper.exists(event.getPath(), this::onExistsChanged);
+            final Stat result = zooKeeper.exists(event.getPath(), false);
             if (result == null) {
                 setupExistsWatch();
                 ensureStopped();
@@ -94,14 +92,15 @@ public class ApplicationSupervisor implements Watcher {
             }
         } catch (KeeperException | InterruptedException e) {
         }
-
     }
+
 
     private void ensureStopped() {
         if (spawned != null && spawned.isAlive()) {
             spawned.destroy();
         }
     }
+
 
     private void ensureStarted() {
         if (spawned == null || !spawned.isAlive()) {
@@ -112,14 +111,17 @@ public class ApplicationSupervisor implements Watcher {
         }
     }
 
+
     private void setupExistsWatch() {
         // asynchronously not to hinder the calling thread
         zooKeeper.exists("/z", this, this::nullStatCallback, null);
     }
 
+
     private void setupChildrenWatch() {
         zooKeeper.getChildren("/z", this, this::nullChildrenCallback, null);
     }
+
 
     private void nullChildrenCallback(int rc, String path, Object ctx, List<String> children) {
     }

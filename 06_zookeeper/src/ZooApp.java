@@ -23,10 +23,14 @@ public class ZooApp {
         ApplicationSupervisor as = new ApplicationSupervisor(addr, toSpawn);
 
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        System.out.println(
+                "Available commands:\nprint - print tree of /z\nquit - exit the app");
         while (true) {
-            String line = br.readLine();
+            String line = br.readLine().trim();
+            if (line.length() == 0)
+                continue;
+
             if (line.charAt(0) == 'p') {
-                System.out.println("/z");
                 as.printSubtree("/z");
             } else if (line.charAt(0) == 'q') {
                 break;
