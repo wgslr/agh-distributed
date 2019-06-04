@@ -133,7 +133,6 @@ public class ApplicationSupervisor implements Watcher {
 
     private void setupChildrenWatch(String path) {
         try {
-            System.out.println(String.format("Setup watch for '%s'", path));
             for (String child : zooKeeper.getChildren(path, this)) {
                 setupChildrenWatch(path + "/" + child);
             }
